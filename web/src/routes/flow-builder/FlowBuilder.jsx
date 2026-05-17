@@ -32,6 +32,7 @@ import {
   addEdge,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import "./theme.css";
 
 // Context for passing the "add next step" callback into custom node
 // components AND the "delete this edge" callback into custom edges.
@@ -207,6 +208,68 @@ function ActivityCard({ id, data }) {
           "outcome_<key>" — keys are lowercased + underscored versions
           of the outcome label, matching the engine's branch_key. */}
       {(() => {
+        // Two-path branching Reach out: when "Wait for reply" is on
+        // AND the timeout action is "branch", the node gets TWO
+        // labeled output handles — a green "If they reply" port and
+        // an amber "If no reply" port. Edges dragged from each carry
+        // sourceHandle="reply" / "no_reply", which the flow compiler
+        // reads to fork the two engine segments.
+        const isBranchingReachOut =
+          !!(ACTIVITY_BY_ID[data.activityId]?.supportsWaitForReply)
+          && !!data.wait_for_reply
+          && (data.wait_timeout_action === "branch");
+        if (isBranchingReachOut) {
+          return (
+            <div className="fb-branch-paths">
+              <div className="fb-branch-path is-yes">
+                <span className="fb-branch-path-ico">✓</span>
+                <span className="fb-branch-path-l">If they reply</span>
+                <button
+                  type="button"
+                  className="fb-next-btn fb-next-btn-yes nodrag nopan"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    ctx.openChooser({ sourceId: id, sourceHandle: "reply" });
+                  }}
+                  aria-label="Add the next step for when they reply"
+                  title="What happens when the customer replies"
+                >
+                  <span aria-hidden="true">+</span>
+                  <span className="fb-next-btn-l">Then</span>
+                </button>
+                <Handle
+                  type="source"
+                  position={Position.Right}
+                  id="reply"
+                  className="fb-handle fb-handle-yes"
+                />
+              </div>
+              <div className="fb-branch-path is-no">
+                <span className="fb-branch-path-ico">⏰</span>
+                <span className="fb-branch-path-l">If no reply</span>
+                <button
+                  type="button"
+                  className="fb-next-btn fb-next-btn-no nodrag nopan"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    ctx.openChooser({ sourceId: id, sourceHandle: "no_reply" });
+                  }}
+                  aria-label="Add the next step for when they don't reply"
+                  title="What happens when the customer doesn't reply in time"
+                >
+                  <span aria-hidden="true">+</span>
+                  <span className="fb-next-btn-l">Then</span>
+                </button>
+                <Handle
+                  type="source"
+                  position={Position.Right}
+                  id="no_reply"
+                  className="fb-handle fb-handle-no"
+                />
+              </div>
+            </div>
+          );
+        }
         const isQualifierAgent =
           data.activityId === "ai_agent"
           && data.agent_category === "qualifier"
@@ -602,7 +665,19 @@ function buildFromTemplate(template) {
         subject: activity.defaultSubject || "",
         body: activity.defaultBody || "",
         waitDays: activity.defaultDurationDays || 1,
+        wait_minutes: activity.defaultWaitMinutes || 60,
         conditionId: activity.defaultConditionId || BRANCH_CONDITIONS[0].id,
+        // Follow-up sequence — seed the internal sub-step array + stop
+        // config from the catalog so the block runs the moment it's
+        // dropped (the per-step config panel ships in Phase 2). The
+        // drawer autosave merges onto data, so these survive edits.
+        ...(activity.defaultSteps ? {
+          steps: activity.defaultSteps,
+          stop_on_stage_change: activity.defaultStopOnStageChange || [],
+          stop_on_unsubscribe: activity.defaultStopOnUnsubscribe !== false,
+          respect_quiet_hours: activity.defaultRespectQuietHours !== false,
+          max_total_days: activity.defaultMaxTotalDays || 30,
+        } : {}),
       },
     };
   }).filter(Boolean);
@@ -613,10 +688,10 @@ function buildFromTemplate(template) {
       source: newNodes[i].id,
       target: newNodes[i + 1].id,
       animated: true,
-      style: { stroke: "#16a34a", strokeWidth: 2.5 },
+      style: { stroke: "var(--fbc-16a34a)", strokeWidth: 2.5 },
       markerEnd: {
         type: MarkerType.ArrowClosed,
-        color: "#16a34a",
+        color: "var(--fbc-16a34a)",
         width: 18,
         height: 18,
       },
@@ -728,6 +803,13 @@ const MERGE_TAGS = [
   { token: "{appointment_at}", label: "Appointment",  sample: "Friday at 10am",       group: "Job" },
   { token: "{owner_name}",     label: "Your name",    sample: "Pat",                  group: "Business" },
   { token: "{review_link}",    label: "Review link",  sample: "g.page/r/your-shop",   group: "Business" },
+  // Two-way conversation variables. Populated ONLY after a customer
+  // replies to a "Wait for reply" step — i.e. usable on the "If they
+  // reply" branch of a branching Reach out (and any step after a
+  // wait-for-reply). Empty on the "If no reply" path. The labels say
+  // so directly so users don't expect them everywhere.
+  { token: "{customer_reply}",      label: "Their reply (after they respond)", sample: "Tuesday at 2pm works", group: "Reply" },
+  { token: "{customer_replied_via}", label: "How they replied",                 sample: "email",                group: "Reply" },
 ];
 
 // Phase 3 of the multi-channel Input spec: variable availability map.
@@ -749,6 +831,11 @@ const _VAR_AVAILABILITY = {
   appointment_at:  { form: "?", phone: "-", email: "-", multiple: "?" },
   owner_name:      { form: "✓", phone: "✓", email: "✓", multiple: "✓" },
   review_link:     { form: "✓", phone: "✓", email: "✓", multiple: "✓" },
+  // Reply vars only populate after a wait-for-reply step resumes —
+  // never guaranteed by the trigger channel alone, so "?" across the
+  // board (the picker shows a "might be empty" hint).
+  customer_reply:       { form: "?", phone: "?", email: "?", multiple: "?" },
+  customer_replied_via: { form: "?", phone: "?", email: "?", multiple: "?" },
 };
 
 function _availabilityForChannel(token, channel) {
@@ -1199,9 +1286,9 @@ function _ReplyPhonePreview_LEGACY_UNUSED({
                                   background: (() => {
                                     const codes = ["form","phone","email","multiple"]
                                       .map(ch => _availabilityForChannel(t.token, ch));
-                                    if (codes.every(c => c === "✓")) return "#16a34a";
-                                    if (codes.some(c => c === "-")) return "#f59e0b";
-                                    return "#94a3b8";
+                                    if (codes.every(c => c === "✓")) return "var(--fbc-16a34a)";
+                                    if (codes.some(c => c === "-")) return "var(--fbc-f59e0b)";
+                                    return "var(--fbc-94a3b8)";
                                   })(),
                                 }} />{t.label}</button>
                           ))}
@@ -1268,9 +1355,9 @@ function _ReplyPhonePreview_LEGACY_UNUSED({
                                   background: (() => {
                                     const codes = ["form","phone","email","multiple"]
                                       .map(ch => _availabilityForChannel(t.token, ch));
-                                    if (codes.every(c => c === "✓")) return "#16a34a";
-                                    if (codes.some(c => c === "-")) return "#f59e0b";
-                                    return "#94a3b8";
+                                    if (codes.every(c => c === "✓")) return "var(--fbc-16a34a)";
+                                    if (codes.some(c => c === "-")) return "var(--fbc-f59e0b)";
+                                    return "var(--fbc-94a3b8)";
                                   })(),
                                 }} />{t.label}</button>
                           ))}
@@ -1614,7 +1701,7 @@ function AiAgentPreview({ agent }) {
   } else if (cat === "conversationalist") {
     blurb = <p className="fb-aiagent-preview-p">Chats with the lead. The step waits until the chat ends.</p>;
   } else if (cat === "widget" || cat === "internal") {
-    blurb = <p className="fb-aiagent-preview-p" style={{color:"#92400e"}}>This bot is built for a {cat === "widget" ? "website widget" : "team chat URL"} and may not produce a clean in-flow outcome.</p>;
+    blurb = <p className="fb-aiagent-preview-p" style={{color:"var(--fbc-92400e)"}}>This bot is built for a {cat === "widget" ? "website widget" : "team chat URL"} and may not produce a clean in-flow outcome.</p>;
   } else {
     const job = (agent.behavior_config || {}).job || "";
     blurb = <p className="fb-aiagent-preview-p">{job ? <>Runs your custom behavior: <em>{job}</em></> : "Runs the bot's prompt as-is."}</p>;
@@ -1691,7 +1778,7 @@ function _InputChannelChooser({ value, onPick }) {
     <div style={{ marginBottom: 12 }}>
       <label style={{
         display: "block", fontSize: 12, fontWeight: 700,
-        color: "#475569", textTransform: "uppercase",
+        color: "var(--fbc-475569)", textTransform: "uppercase",
         letterSpacing: ".04em", marginBottom: 6,
       }}>
         Trigger
@@ -1700,8 +1787,8 @@ function _InputChannelChooser({ value, onPick }) {
         value={value || "form"}
         onChange={(e) => onPick(e.target.value)}
         style={{
-          width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1",
-          borderRadius: 8, background: "#fff", color: "#0f172a",
+          width: "100%", padding: "10px 12px", border: "1px solid var(--fbc-cbd5e1)",
+          borderRadius: 8, background: "var(--fbc-fff)", color: "var(--fbc-0f172a)",
           fontSize: 13.5, fontWeight: 500, font: "inherit", cursor: "pointer",
           outline: "none",
         }}
@@ -1711,7 +1798,7 @@ function _InputChannelChooser({ value, onPick }) {
         ))}
       </select>
       <div style={{
-        fontSize: 12, color: "#64748b", marginTop: 6, lineHeight: 1.45,
+        fontSize: 12, color: "var(--fbc-64748b)", marginTop: 6, lineHeight: 1.45,
       }}>
         {current.sub}
       </div>
@@ -1749,14 +1836,14 @@ function _EmailTriggerConfig({ settings, onChange }) {
 
   return (
     <div style={{
-      border: "1px solid #e5e7eb", background: "#fff",
-      borderRadius: 10, padding: 14, fontSize: 13, color: "#374151",
+      border: "1px solid var(--fbc-e5e7eb)", background: "var(--fbc-fff)",
+      borderRadius: 10, padding: 14, fontSize: 13, color: "var(--fbc-374151)",
     }}>
-      <div style={{ fontWeight: 700, color: "#0f172a", marginBottom: 4 }}>
+      <div style={{ fontWeight: 700, color: "var(--fbc-0f172a)", marginBottom: 4 }}>
         ✉️ Incoming email
       </div>
       <p style={{ margin: "0 0 10px", lineHeight: 1.5,
-                  fontSize: 12.5, color: "#64748b" }}>
+                  fontSize: 12.5, color: "var(--fbc-64748b)" }}>
         Triggers within ~5 minutes of an email arriving on your
         connected Gmail. All filters are optional — leave blank to
         match any.
@@ -1764,11 +1851,11 @@ function _EmailTriggerConfig({ settings, onChange }) {
 
       {/* Inbox picker — sourced from /me/email-connections. */}
       <label style={{ display: "block", fontSize: 12, fontWeight: 600,
-                      color: "#374151", marginBottom: 4 }}>
+                      color: "var(--fbc-374151)", marginBottom: 4 }}>
         Which inbox?
       </label>
       {loading ? (
-        <div style={{ color: "#9ca3af", fontSize: 12, marginBottom: 10 }}>
+        <div style={{ color: "var(--fbc-9ca3af)", fontSize: 12, marginBottom: 10 }}>
           Loading your connected Gmail accounts…
         </div>
       ) : conns.length ? (
@@ -1776,9 +1863,9 @@ function _EmailTriggerConfig({ settings, onChange }) {
           value={settings.inbox_address || ""}
           onChange={(e) => onChange({ ...settings, inbox_address: e.target.value })}
           style={{ width: "100%", padding: "8px 10px",
-                   border: "1px solid #d1d5db", borderRadius: 6,
+                   border: "1px solid var(--fbc-d1d5db)", borderRadius: 6,
                    fontSize: 13, marginBottom: 10, boxSizing: "border-box",
-                   background: "#fff" }}
+                   background: "var(--fbc-fff)" }}
         >
           {conns.length > 1 && <option value="">Any of my inboxes</option>}
           {conns.map(c => (
@@ -1789,82 +1876,170 @@ function _EmailTriggerConfig({ settings, onChange }) {
         </select>
       ) : (
         <div style={{
-          padding: 10, border: "1px dashed #d1d5db", borderRadius: 6,
-          fontSize: 12.5, color: "#6b7280", marginBottom: 10,
+          padding: 10, border: "1px dashed var(--fbc-d1d5db)", borderRadius: 6,
+          fontSize: 12.5, color: "var(--fbc-6b7280)", marginBottom: 10,
         }}>
           You haven't connected a Gmail account yet.
           {" "}
           <a href={connectUrl} target="_top"
-             style={{ color: "#185fa5", fontWeight: 600 }}>
+             style={{ color: "var(--fbc-185fa5)", fontWeight: 600 }}>
             + Connect Gmail
           </a>
         </div>
       )}
 
-      {/* Restrictions — optional filters that narrow which emails
-          trigger this flow. Comma-separated, case-insensitive
-          substring match. Leaving any field blank means "match
-          anything for this field" (i.e. the field is ignored).
-          Backed by from_match / subject_match / to_match in
-          sequences/multi_channel_input.py. */}
+      {/* Restrictions — chip-style inputs make it obvious how to add
+          multiple values, and each chip is independently removable.
+          Each field is a CONTAINS match: "@acme.com" matches any
+          sender from acme.com; "invoice" matches any subject with
+          "invoice" anywhere in it. Persisted as comma-separated
+          strings to keep the backend matcher (multi_channel_input.py)
+          unchanged. */}
       <div style={{
-        marginTop: 4, marginBottom: 8, padding: 10,
-        background: "#f8fafc", border: "1px solid #e5e7eb",
+        marginTop: 4, marginBottom: 0, padding: 12,
+        background: "var(--fbc-f8fafc)", border: "1px solid var(--fbc-e5e7eb)",
         borderRadius: 8,
       }}>
-        <div style={{ fontSize: 12, fontWeight: 700,
-                       color: "#0f172a", marginBottom: 2 }}>
+        <div style={{ fontSize: 12.5, fontWeight: 700,
+                       color: "var(--fbc-0f172a)", marginBottom: 4 }}>
           Restrict which emails trigger this flow
         </div>
-        <div style={{ fontSize: 11.5, color: "#64748b",
-                       marginBottom: 8, lineHeight: 1.4 }}>
-          Without restrictions, every email to this inbox triggers
-          the flow. Add at least one filter below to narrow it down.
+        <div style={{ fontSize: 12, color: "var(--fbc-64748b)",
+                       marginBottom: 12, lineHeight: 1.45 }}>
+          Without restrictions, every email to this inbox fires the
+          flow. Add a value to any field below to narrow it down —
+          fields are <strong style={{ color: "var(--fbc-0f172a)" }}>contains</strong>
+          {" "}matches, so <code style={{
+            background: "var(--fbc-fff)", padding: "1px 5px", borderRadius: 3,
+            fontFamily: "ui-monospace, SF Mono, Menlo, monospace",
+            fontSize: 11.5, color: "var(--fbc-4338ca)" }}>@acme.com</code> catches
+          every sender from acme.com.
         </div>
         {[
           { key: "from_match",
-            label: "From (sender contains)",
-            ph:    "jane@acme.com, @vendor.com" },
+            label: "From — sender contains any of:",
+            ph:    "@acme.com" },
           { key: "subject_match",
-            label: "Subject contains",
-            ph:    "invoice, order, support" },
+            label: "Subject contains any of:",
+            ph:    "invoice" },
           { key: "to_match",
-            label: "Sent to address",
+            label: "Sent-to address contains any of:",
             ph:    "sales@yourco.com" },
         ].map(f => (
-          <label key={f.key} style={{ display: "block", marginBottom: 6 }}>
-            <span style={{ display: "block", fontSize: 11.5, fontWeight: 600,
-                           color: "#374151", marginBottom: 2 }}>{f.label}</span>
-            <input type="text"
-              value={settings[f.key] || ""}
-              placeholder={f.ph}
-              onChange={(e) => onChange({ ...settings, [f.key]: e.target.value })}
-              style={{ width: "100%", padding: "6px 8px",
-                       border: "1px solid #d1d5db", borderRadius: 6,
-                       fontSize: 12.5, boxSizing: "border-box" }}
-            />
-          </label>
+          <_EmailFilterChips
+            key={f.key}
+            label={f.label}
+            placeholder={f.ph}
+            value={settings[f.key] || ""}
+            onChange={(next) => onChange({ ...settings, [f.key]: next })}
+          />
         ))}
       </div>
+    </div>
+  );
+}
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 6 }}>
-        {[
-          { id: "skip_spam",        label: "Skip spam emails",                       defaultOn: true },
-          { id: "skip_promotional", label: "Skip promotional emails (newsletters)",  defaultOn: true },
-          { id: "skip_own_domain",  label: "Skip emails from your own team's domain", defaultOn: true },
-        ].map(opt => {
-          const checked = settings[opt.id] === undefined ? opt.defaultOn : !!settings[opt.id];
-          return (
-            <label key={opt.id} style={{ fontSize: 12.5, color: "#0f172a",
-                                          display: "flex", alignItems: "center", gap: 6 }}>
-              <input type="checkbox"
-                checked={checked}
-                onChange={(e) => onChange({ ...settings, [opt.id]: e.target.checked })}
-              />
-              {opt.label}
-            </label>
-          );
-        })}
+// Chip-style multi-value input for an email filter. Stores as a
+// comma-separated string under the hood (so the backend matcher's
+// _csv_list parser still works), but the UI lets the user add /
+// remove individual values without manually typing commas. Enter,
+// comma, semicolon, or paste-with-separators commits a chip.
+// Backspace on an empty input pops the last chip.
+function _EmailFilterChips({ label, placeholder, value, onChange }) {
+  const [draft, setDraft] = React.useState("");
+  const items = React.useMemo(() => {
+    return (value || "")
+      .split(/[,;]+/)
+      .map(s => s.trim())
+      .filter(Boolean);
+  }, [value]);
+  function commit(next) {
+    onChange((next || []).join(", "));
+  }
+  function addRaw(raw) {
+    const piece = (raw || "").trim().replace(/[,;]+$/, "");
+    if (!piece) return;
+    if (items.includes(piece)) return;
+    commit([...items, piece]);
+  }
+  function removeAt(i) {
+    const next = items.slice();
+    next.splice(i, 1);
+    commit(next);
+  }
+  function onInputKey(e) {
+    if (e.key === "Enter" || e.key === "," || e.key === ";") {
+      e.preventDefault();
+      addRaw(draft);
+      setDraft("");
+    } else if (e.key === "Backspace" && !draft && items.length) {
+      removeAt(items.length - 1);
+    }
+  }
+  function onPaste(e) {
+    const text = (e.clipboardData || window.clipboardData).getData("text") || "";
+    if (/[,;\s]/.test(text)) {
+      e.preventDefault();
+      text.split(/[,;\s]+/).forEach(addRaw);
+    }
+  }
+  function onBlur() {
+    if (draft.trim()) {
+      addRaw(draft);
+      setDraft("");
+    }
+  }
+  return (
+    <div style={{ marginBottom: 10 }}>
+      <span style={{ display: "block", fontSize: 12, fontWeight: 600,
+                      color: "var(--fbc-475569)", marginBottom: 4 }}>
+        {label}
+      </span>
+      <div
+        onClick={(e) => {
+          // Click the wrapper to focus the input.
+          const inp = e.currentTarget.querySelector("input");
+          if (inp && e.target === e.currentTarget) inp.focus();
+        }}
+        style={{
+          display: "flex", flexWrap: "wrap", gap: 4,
+          padding: 6, minHeight: 36,
+          border: "1px solid var(--fbc-cbd5e1)", borderRadius: 8, background: "var(--fbc-fff)",
+        }}
+      >
+        {items.map((it, i) => (
+          <span key={i} style={{
+            display: "inline-flex", alignItems: "center", gap: 5,
+            padding: "3px 4px 3px 9px", background: "var(--fbc-eef2ff)",
+            color: "var(--fbc-312e81)", borderRadius: 999,
+            fontSize: 12, fontWeight: 500,
+          }}>
+            <span>{it}</span>
+            <button type="button"
+              onClick={(e) => { e.stopPropagation(); removeAt(i); }}
+              title="Remove"
+              style={{
+                border: 0, background: "transparent", cursor: "pointer",
+                color: "var(--fbc-6366f1)", fontSize: 13, lineHeight: 1, padding: "0 3px",
+                borderRadius: 4,
+              }}
+            >×</button>
+          </span>
+        ))}
+        <input
+          type="text"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={onInputKey}
+          onPaste={onPaste}
+          onBlur={onBlur}
+          placeholder={items.length ? "" : placeholder}
+          style={{
+            flex: 1, minWidth: 120, border: 0, outline: 0,
+            font: "inherit", fontSize: 12.5, padding: "3px 4px",
+            background: "transparent", color: "var(--fbc-0f172a)",
+          }}
+        />
       </div>
     </div>
   );
@@ -1898,23 +2073,23 @@ function _PhoneTriggerConfig({ settings, onChange, hideEventToggles }) {
 
   return (
     <div style={{
-      border: "1px solid #e5e7eb", background: "#fff",
-      borderRadius: 10, padding: 14, fontSize: 13, color: "#374151",
+      border: "1px solid var(--fbc-e5e7eb)", background: "var(--fbc-fff)",
+      borderRadius: 10, padding: 14, fontSize: 13, color: "var(--fbc-374151)",
     }}>
-      <div style={{ fontWeight: 700, color: "#0f172a", marginBottom: 4 }}>
+      <div style={{ fontWeight: 700, color: "var(--fbc-0f172a)", marginBottom: 4 }}>
         📞 Calls and texts
       </div>
       <p style={{ margin: "0 0 10px", lineHeight: 1.5,
-                  fontSize: 12.5, color: "#64748b" }}>
+                  fontSize: 12.5, color: "var(--fbc-64748b)" }}>
         Triggers when an event lands on your Twilio number.
       </p>
 
       <label style={{ display: "block", fontSize: 12, fontWeight: 600,
-                      color: "#374151", marginBottom: 4 }}>
+                      color: "var(--fbc-374151)", marginBottom: 4 }}>
         Phone number
       </label>
       {loading ? (
-        <div style={{ color: "#9ca3af", fontSize: 12, marginBottom: 10 }}>
+        <div style={{ color: "var(--fbc-9ca3af)", fontSize: 12, marginBottom: 10 }}>
           Loading your numbers…
         </div>
       ) : phones.length ? (
@@ -1922,9 +2097,9 @@ function _PhoneTriggerConfig({ settings, onChange, hideEventToggles }) {
           value={settings.phone_number || ""}
           onChange={(e) => onChange({ ...settings, phone_number: e.target.value })}
           style={{ width: "100%", padding: "8px 10px",
-                   border: "1px solid #d1d5db", borderRadius: 6,
+                   border: "1px solid var(--fbc-d1d5db)", borderRadius: 6,
                    fontSize: 13, marginBottom: 10, boxSizing: "border-box",
-                   background: "#fff" }}
+                   background: "var(--fbc-fff)" }}
         >
           <option value="">Any of my numbers</option>
           {phones.map(p => (
@@ -1935,13 +2110,13 @@ function _PhoneTriggerConfig({ settings, onChange, hideEventToggles }) {
         </select>
       ) : (
         <div style={{
-          padding: 10, border: "1px dashed #d1d5db", borderRadius: 6,
-          fontSize: 12.5, color: "#6b7280", marginBottom: 10,
+          padding: 10, border: "1px dashed var(--fbc-d1d5db)", borderRadius: 6,
+          fontSize: 12.5, color: "var(--fbc-6b7280)", marginBottom: 10,
         }}>
           You don't have any Twilio numbers connected yet.
           {" "}
           <a href="/dashboard#phones" target="_top"
-             style={{ color: "#185fa5", fontWeight: 600 }}>
+             style={{ color: "var(--fbc-185fa5)", fontWeight: 600 }}>
             + Connect a number
           </a>
         </div>
@@ -1949,9 +2124,9 @@ function _PhoneTriggerConfig({ settings, onChange, hideEventToggles }) {
 
       {hasVoiceAgent && (
         <div style={{
-          background: "#fef3c7", border: "1px solid #fde68a",
+          background: "var(--fbc-fef3c7)", border: "1px solid var(--fbc-fde68a)",
           borderRadius: 8, padding: "8px 10px", marginBottom: 10,
-          fontSize: 12, color: "#92400e", lineHeight: 1.5,
+          fontSize: 12, color: "var(--fbc-92400e)", lineHeight: 1.5,
         }}>
           ⚠ A voice bot already handles live calls on this number.
           This flow will still fire <em>after the call ends</em>, so
@@ -1966,7 +2141,7 @@ function _PhoneTriggerConfig({ settings, onChange, hideEventToggles }) {
             { id: "on_sms",        label: "When a text message comes in" },
             { id: "on_call_ended", label: "When a phone call ends (answered, missed, voicemail)" },
           ].map(opt => (
-            <label key={opt.id} style={{ fontSize: 12.5, color: "#0f172a",
+            <label key={opt.id} style={{ fontSize: 12.5, color: "var(--fbc-0f172a)",
                                           display: "flex", alignItems: "center", gap: 6 }}>
               <input type="checkbox"
                 checked={!!settings[opt.id]}
@@ -1999,14 +2174,14 @@ function _InputChannelComingSoon({ kind, settings, onChange }) {
   if (false) {
     return (
       <div style={{
-        border: "1px solid #e5e7eb", background: "#fff",
-        borderRadius: 10, padding: 14, fontSize: 13, color: "#374151",
+        border: "1px solid var(--fbc-e5e7eb)", background: "var(--fbc-fff)",
+        borderRadius: 10, padding: 14, fontSize: 13, color: "var(--fbc-374151)",
       }}>
-        <div style={{ fontWeight: 700, color: "#0f172a", marginBottom: 4 }}>
+        <div style={{ fontWeight: 700, color: "var(--fbc-0f172a)", marginBottom: 4 }}>
           ✉️ Incoming email
         </div>
         <p style={{ margin: "0 0 10px", lineHeight: 1.5,
-                    fontSize: 12.5, color: "#64748b" }}>
+                    fontSize: 12.5, color: "var(--fbc-64748b)" }}>
           Triggers within ~5 minutes of an email arriving on your
           connected Gmail. All filters are optional — leave blank to
           match any.
@@ -2018,11 +2193,11 @@ function _InputChannelComingSoon({ kind, settings, onChange }) {
         ].map(f => (
           <label key={f.key} style={{ display: "block", marginBottom: 8 }}>
             <span style={{ display: "block", fontSize: 12, fontWeight: 600,
-                           color: "#6b7280", marginBottom: 4 }}>{f.label}</span>
+                           color: "var(--fbc-6b7280)", marginBottom: 4 }}>{f.label}</span>
             <input type="text"
               value={settings[f.key] || ""}
               onChange={(e) => onChange({ ...settings, [f.key]: e.target.value })}
-              style={{ width: "100%", padding: "8px 10px", border: "1px solid #d1d5db",
+              style={{ width: "100%", padding: "8px 10px", border: "1px solid var(--fbc-d1d5db)",
                        borderRadius: 6, fontSize: 13, boxSizing: "border-box" }}
             />
           </label>
@@ -2035,7 +2210,7 @@ function _InputChannelComingSoon({ kind, settings, onChange }) {
           ].map(opt => {
             const checked = settings[opt.id] === undefined ? opt.defaultOn : !!settings[opt.id];
             return (
-              <label key={opt.id} style={{ fontSize: 12.5, color: "#0f172a",
+              <label key={opt.id} style={{ fontSize: 12.5, color: "var(--fbc-0f172a)",
                                             display: "flex", alignItems: "center", gap: 6 }}>
                 <input type="checkbox"
                   checked={checked}
@@ -2064,15 +2239,15 @@ function _InputChannelComingSoon({ kind, settings, onChange }) {
   return (
     <div>
       <div style={{
-        border: "1px solid #e5e7eb", background: "#fff",
-        borderRadius: 10, padding: 14, fontSize: 13, color: "#374151",
+        border: "1px solid var(--fbc-e5e7eb)", background: "var(--fbc-fff)",
+        borderRadius: 10, padding: 14, fontSize: 13, color: "var(--fbc-374151)",
         marginBottom: 10,
       }}>
-        <div style={{ fontWeight: 700, color: "#0f172a", marginBottom: 4,
+        <div style={{ fontWeight: 700, color: "var(--fbc-0f172a)", marginBottom: 4,
                       fontSize: 13.5 }}>
           🔀 Multiple triggers
         </div>
-        <p style={{ margin: 0, lineHeight: 1.5, color: "#64748b", fontSize: 12.5 }}>
+        <p style={{ margin: 0, lineHeight: 1.5, color: "var(--fbc-64748b)", fontSize: 12.5 }}>
           This flow runs when ANY enabled trigger fires. Downstream
           blocks read the same <code>{"{{lead.message}}"}</code> and
           <code>{"{{lead.source}}"}</code> variables regardless of
@@ -2082,8 +2257,8 @@ function _InputChannelComingSoon({ kind, settings, onChange }) {
 
       {/* Phone toggle + inline config */}
       <div style={{
-        border: "1px solid " + (isOn("phone") ? "#0f172a" : "#e5e7eb"),
-        background: isOn("phone") ? "#f8fafc" : "#fff",
+        border: "1px solid " + (isOn("phone") ? "var(--fbc-0f172a)" : "var(--fbc-e5e7eb)"),
+        background: isOn("phone") ? "var(--fbc-f8fafc)" : "var(--fbc-fff)",
         borderRadius: 10, padding: 12, marginBottom: 8,
       }}>
         <label style={{ display: "flex", alignItems: "center", gap: 8,
@@ -2099,7 +2274,7 @@ function _InputChannelComingSoon({ kind, settings, onChange }) {
               value={(multi.phone || {}).phone_number || ""}
               onChange={(e) => setMultiKind("phone", { phone_number: e.target.value })}
               style={{ width: "100%", padding: "6px 10px",
-                       border: "1px solid #d1d5db", borderRadius: 6,
+                       border: "1px solid var(--fbc-d1d5db)", borderRadius: 6,
                        fontSize: 13, marginBottom: 6, boxSizing: "border-box" }}
             />
             {[
@@ -2107,7 +2282,7 @@ function _InputChannelComingSoon({ kind, settings, onChange }) {
               { id: "on_call_ended", label: "Phone call ended" },
             ].map(opt => (
               <label key={opt.id} style={{ display: "block", fontSize: 12,
-                                            color: "#0f172a", marginTop: 2 }}>
+                                            color: "var(--fbc-0f172a)", marginTop: 2 }}>
                 <input type="checkbox"
                   checked={!!(multi.phone || {})[opt.id]}
                   onChange={(e) => setMultiKind("phone", { [opt.id]: e.target.checked })}
@@ -2120,8 +2295,8 @@ function _InputChannelComingSoon({ kind, settings, onChange }) {
 
       {/* Email toggle + inline config */}
       <div style={{
-        border: "1px solid " + (isOn("email") ? "#0f172a" : "#e5e7eb"),
-        background: isOn("email") ? "#f8fafc" : "#fff",
+        border: "1px solid " + (isOn("email") ? "var(--fbc-0f172a)" : "var(--fbc-e5e7eb)"),
+        background: isOn("email") ? "var(--fbc-f8fafc)" : "var(--fbc-fff)",
         borderRadius: 10, padding: 12, marginBottom: 8,
       }}>
         <label style={{ display: "flex", alignItems: "center", gap: 8,
@@ -2132,7 +2307,7 @@ function _InputChannelComingSoon({ kind, settings, onChange }) {
         </label>
         {isOn("email") && (
           <div style={{ marginTop: 8, paddingLeft: 22, fontSize: 12,
-                        color: "#6b7280", lineHeight: 1.5 }}>
+                        color: "var(--fbc-6b7280)", lineHeight: 1.5 }}>
             Triggers on every incoming email to your connected Gmail
             (skipping spam, promotional, and your own team's domain
             by default).
@@ -2144,11 +2319,11 @@ function _InputChannelComingSoon({ kind, settings, onChange }) {
           mode for now. Owners who need the form-trigger surface should
           stay on single-channel "form" mode. */}
       <div style={{
-        border: "1px solid #e5e7eb", background: "#f8fafc",
-        borderRadius: 10, padding: 10, fontSize: 12, color: "#6b7280",
+        border: "1px solid var(--fbc-e5e7eb)", background: "var(--fbc-f8fafc)",
+        borderRadius: 10, padding: 10, fontSize: 12, color: "var(--fbc-6b7280)",
       }}>
         💡 To also trigger from a form here, switch back to
-        <strong style={{ color: "#0f172a" }}> single-channel "form"</strong>
+        <strong style={{ color: "var(--fbc-0f172a)" }}> single-channel "form"</strong>
         mode and set up the form fields. Mixing forms into the
         Multiple-triggers panel ships next.
       </div>
@@ -2156,109 +2331,11 @@ function _InputChannelComingSoon({ kind, settings, onChange }) {
   );
 }
 
-function _TestTriggerButton({ triggerChannel, channelSettings }) {
-  const [busy, setBusy]   = React.useState(false);
-  const [note, setNote]   = React.useState("");
-  // The flow id this Input belongs to — read from localStorage
-  // (FlowBuilder writes it on canvas mount as outreach_active_user_flow_id).
-  const flowId = (typeof window !== "undefined")
-    ? (window.localStorage.getItem("outreach_active_user_flow_id") || "")
-    : "";
-
-  if (!flowId) return null;
-  if (triggerChannel === "form") return null;  // form has its own preview path
-
-  async function fire() {
-    setBusy(true);
-    setNote("Firing…");
-    let body = { channel: "" };
-    if (triggerChannel === "phone") {
-      body = {
-        channel: "sms",
-        from:    "+15551239999",
-        to:      channelSettings.phone_number || "",
-        message: "Test trigger from the Input drawer.",
-      };
-    } else if (triggerChannel === "email") {
-      body = {
-        channel: "email",
-        from:    "test@example.com",
-        subject: "Test trigger",
-        message: "Test trigger from the Input drawer.",
-      };
-    } else if (triggerChannel === "multiple") {
-      // Pick whichever child trigger is enabled, prefer phone.
-      const m = channelSettings.multi || {};
-      if ((m.phone || {}).enabled) {
-        body = {
-          channel: "sms",
-          from:    "+15551239999",
-          to:      (m.phone || {}).phone_number || "",
-          message: "Test trigger from the Input drawer.",
-        };
-      } else if ((m.email || {}).enabled) {
-        body = {
-          channel: "email",
-          from:    "test@example.com",
-          subject: "Test trigger",
-          message: "Test trigger from the Input drawer.",
-        };
-      } else {
-        setBusy(false);
-        setNote("Enable at least one channel to test.");
-        return;
-      }
-    }
-    try {
-      const r = await fetch(
-        "/me/flows/" + encodeURIComponent(flowId) + "/test-trigger",
-        { method: "POST", credentials: "same-origin",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body) });
-      const d = await r.json().catch(() => ({}));
-      if (r.ok && d.ok) {
-        const enr = (d.enrollment_ids || []).length;
-        setNote(enr
-          ? `✓ Fired — ${enr} step run started, lead ${d.lead_id || "n/a"}`
-          : `✓ Routed (${d.channel_routed}) but no flow enrolled — check trigger config`);
-      } else {
-        setNote("Couldn't fire: " + (d.error || d.notes || r.status));
-      }
-    } catch (_) {
-      setNote("Network error.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <div style={{
-      marginTop: 12, padding: "10px 12px",
-      background: "#f8fafc", border: "1px solid #e5e7eb",
-      borderRadius: 8, fontSize: 12.5,
-    }}>
-      <div style={{ display: "flex", alignItems: "center",
-                    justifyContent: "space-between", gap: 8 }}>
-        <span style={{ color: "#374151" }}>
-          <strong style={{ color: "#0f172a" }}>Test trigger</strong>
-          {" "}— fires this flow with a synthetic event so you can
-          watch downstream blocks run.
-        </span>
-        <button type="button" onClick={fire} disabled={busy}
-          style={{ padding: "6px 12px", borderRadius: 6,
-                   background: "#0f172a", color: "#fff", border: 0,
-                   font: "600 12.5px inherit", cursor: busy ? "wait" : "pointer" }}>
-          {busy ? "…" : "Fire test event →"}
-        </button>
-      </div>
-      {note && (
-        <div style={{ marginTop: 8, color: "#475569", fontSize: 12 }}>
-          {note}
-        </div>
-      )}
-    </div>
-  );
-}
+// _TestTriggerButton was removed — the canvas-level "Test this flow"
+// button covers the same use case without surfacing a synthetic-
+// event button inside every Input drawer. Kept the import-stable
+// export name for any leftover references; renders nothing.
+function _TestTriggerButton() { return null; }
 
 function InputChannelPanel({ nodeId, data, onChange }) {
   // Virtual channel id (one of the dropdown options:
@@ -2547,16 +2624,11 @@ function InputChannelPanel({ nodeId, data, onChange }) {
   if (triggerChannel !== "form") {
     return (
       <div>
-        <label className="fb-drawer-l">What kicks off this flow?</label>
         <_InputChannelChooser value={triggerChannel} onPick={setTriggerChannel} />
         <_InputChannelComingSoon
           kind={triggerChannel}
           settings={channelSettings}
           onChange={setChannelSettings}
-        />
-        <_TestTriggerButton
-          triggerChannel={triggerChannel}
-          channelSettings={channelSettings}
         />
       </div>
     );
@@ -2564,10 +2636,7 @@ function InputChannelPanel({ nodeId, data, onChange }) {
 
   return (
     <div className="fb-ich is-form-editor">
-      <label className="fb-drawer-l" style={{ paddingLeft: 16, paddingTop: 14 }}>
-        What kicks off this flow?
-      </label>
-      <div style={{ padding: "0 16px" }}>
+      <div style={{ padding: "14px 16px 0" }}>
         <_InputChannelChooser value={triggerChannel} onPick={setTriggerChannel} />
       </div>
       <div className="fb-ich-grid">
@@ -2620,15 +2689,10 @@ function InputChannelPanel({ nodeId, data, onChange }) {
 
               {activeForm && (
                 <>
-                  <div className="fb-bsection-h">Form name</div>
-                  <input
-                    className="fb-binput"
-                    value={name}
-                    placeholder="Contact form"
-                    onChange={(e) => commitName(e.target.value)}
-                    onBlur={flushPendingName}
-                  />
-
+                  {/* Form Name field removed — renaming a form lives
+                      in the Forms tab's editor popup; surfacing it
+                      again inside the Input drawer caused a confusing
+                      "two places to rename" surface. */}
                   <div className="fb-bsection-h fb-bsection-h-row" style={{ marginBottom: 4 }}>
                     <span>Fields</span>
                     <span className="fb-bsave-tag" aria-live="polite">
@@ -2771,15 +2835,20 @@ function InputChannelPanel({ nodeId, data, onChange }) {
                   )}
 
                   {activeTab === "site" && (
-                    <SiteFieldsPane
-                      siteFields={siteFields}
-                      formFieldKeys={fields.map(f => f.key)}
-                      webhookUrl={activeForm?.webhook_url || activeForm?.webhook_trigger_url || ""}
-                      onUpdate={updateSiteField}
-                      onRemove={removeSiteField}
-                      onAdd={addSiteField}
-                      onAddBulk={addSiteFieldsBulk}
-                    />
+                    <_SafePane onError={() => setActiveTab("form")}>
+                      <SiteFieldsPane
+                        siteFields={Array.isArray(siteFields) ? siteFields : []}
+                        formFieldKeys={(Array.isArray(fields) ? fields : [])
+                                        .map(f => (f && f.key) || "")
+                                        .filter(Boolean)}
+                        webhookUrl={(activeForm && (activeForm.webhook_url
+                                      || activeForm.webhook_trigger_url)) || ""}
+                        onUpdate={updateSiteField}
+                        onRemove={removeSiteField}
+                        onAdd={addSiteField}
+                        onAddBulk={addSiteFieldsBulk}
+                      />
+                    </_SafePane>
                   )}
 
                   <a
@@ -2804,9 +2873,6 @@ function InputChannelPanel({ nodeId, data, onChange }) {
           )}
         </div>
 
-        <div className="fb-ich-preview-pane">
-          <FormPreview activeForm={activeForm} name={name} fields={fields} />
-        </div>
       </div>
     </div>
   );
@@ -2905,15 +2971,31 @@ function FldCard({
   );
 }
 
-// Domain-specific site-field presets. Each preset is a {key, label}
-// pair the user can drop into "From your site" with one click — those
-// keys then become merge tags ({landscape_summary} etc.) AND show up
-// in the email recipient picker, the call recipient picker, and the
-// Google Sheet column editor's tag suggestions.
-//
-// Currently only the landscaping bundle is wired. To add another
-// vertical (plumber, contractor, etc.) just append another array
-// here and surface it in the Quick-add section below.
+// ─── Field preset packs ─────────────────────────────────────────
+// Each pack is a labeled bundle of {key, label} field suggestions
+// the user can one-click drop into "From your site". Picking a
+// pack swaps the chip list; "Common" is the default for any
+// business and contains the fields almost every form sends. The
+// landscaping pack is kept for backward compatibility with the
+// existing landscaping vertical — DON'T delete it without first
+// migrating existing flows that reference {landscape_*} tags.
+const COMMON_FIELD_PRESETS = [
+  { key: "customer_name",   label: "Customer name" },
+  { key: "customer_email",  label: "Customer email" },
+  { key: "customer_phone",  label: "Customer phone" },
+  { key: "company",         label: "Company / Business" },
+  { key: "city",            label: "City" },
+  { key: "state",           label: "State" },
+  { key: "zip",             label: "ZIP / Postal code" },
+  { key: "address",         label: "Address" },
+  { key: "service_type",    label: "What they need / Service" },
+  { key: "budget",          label: "Budget" },
+  { key: "preferred_date",  label: "Preferred date / Timing" },
+  { key: "referral_source", label: "How they found you" },
+  { key: "page_url",        label: "Page they were on" },
+  { key: "utm_source",      label: "Marketing source (UTM)" },
+];
+
 const LANDSCAPING_PRO_PRESETS = [
   { key: "landscape_name",                label: "Business name" },
   { key: "landscape_email",               label: "Pro's email" },
@@ -2947,6 +3029,44 @@ const LANDSCAPING_PRO_PRESETS = [
 // Below the editor, an auto-generated copy-paste recipe shows how to
 // send these from a generic HTML site. Platform-specific recipes
 // (Wix, Squarespace, etc.) are a follow-up.
+// Tiny React error boundary — catches render errors in its
+// children so the rest of the FlowBuilder canvas stays alive
+// instead of unmounting entirely (which was causing the "blank
+// screen" the user saw when the From-your-site tab crashed).
+// On error, optionally calls onError so the parent can recover
+// (e.g. flip back to the Form tab).
+class _SafePane extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { err: null };
+  }
+  static getDerivedStateFromError(err) { return { err: err }; }
+  componentDidCatch(err, info) {
+    try { console.error("[fb-safe-pane]", err, info); } catch (_) {}
+    if (typeof this.props.onError === "function") {
+      try { this.props.onError(err); } catch (_) {}
+    }
+  }
+  render() {
+    if (this.state.err) {
+      return (
+        <div style={{
+          padding: 14, border: "1px solid var(--fbc-fecaca)",
+          background: "var(--fbc-fef2f2)", color: "var(--fbc-991b1b)",
+          borderRadius: 8, fontSize: 13, lineHeight: 1.5,
+        }}>
+          <strong>Something went wrong rendering this panel.</strong>
+          <div style={{ marginTop: 4, fontSize: 12 }}>
+            We've kept the rest of the canvas alive so you don't lose work.
+            Refresh the page or switch tabs to retry.
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 function SiteFieldsPane({ siteFields, formFieldKeys, webhookUrl, onUpdate, onRemove, onAdd, onAddBulk }) {
   const [copied, setCopied] = React.useState("");
   // Platform recipe tabs: "fetch" (vanilla JS), "wix" (Velo), "html"
@@ -3071,21 +3191,44 @@ function SiteFieldsPane({ siteFields, formFieldKeys, webhookUrl, onUpdate, onRem
     } catch (_) {}
   }
 
-  // Presets — keys the user can one-click add. Skip presets whose key
-  // is already on the form (so the chips don't suggest duplicates).
+  // Preset packs — the user picks which bundle of suggested fields
+  // makes sense for their business. "Common" is the default and works
+  // for any business; the landscaping pack is kept for the existing
+  // vertical. Persisted in localStorage so the choice sticks.
+  const PRESET_PACKS = {
+    common: {
+      label: "Common business fields",
+      sub:   "What most forms collect — name, email, phone, address, etc.",
+      items: COMMON_FIELD_PRESETS,
+    },
+    landscaping: {
+      label: "Landscaping pro variables",
+      sub:   "Picked-landscaper info attached by the /landscaping contact form",
+      items: LANDSCAPING_PRO_PRESETS,
+    },
+  };
+  const [activePack, setActivePack] = React.useState(function () {
+    try { return localStorage.getItem("fb_site_preset_pack") || "common"; }
+    catch (_) { return "common"; }
+  });
+  function pickPack(id) {
+    setActivePack(id);
+    try { localStorage.setItem("fb_site_preset_pack", id); } catch (_) {}
+  }
+  var packItems = (PRESET_PACKS[activePack] || PRESET_PACKS.common).items;
+  // Skip presets whose key is already on the form (no duplicate chips).
   const existingKeys = new Set([
     ...(formFieldKeys || []),
     ...siteFields.map(f => f.key),
   ]);
-  const availablePresets = LANDSCAPING_PRO_PRESETS
-    .filter(p => !existingKeys.has(p.key));
+  const availablePresets = packItems.filter(p => !existingKeys.has(p.key));
   const allPresetsAdded = availablePresets.length === 0
-    && LANDSCAPING_PRO_PRESETS.every(p => existingKeys.has(p.key));
+    && packItems.every(p => existingKeys.has(p.key));
   function addOnePreset(preset) {
     if (typeof onAddBulk === "function") onAddBulk([preset]);
   }
-  function addAllLandscapingPresets() {
-    if (typeof onAddBulk === "function") onAddBulk(LANDSCAPING_PRO_PRESETS);
+  function addAllPackPresets() {
+    if (typeof onAddBulk === "function") onAddBulk(packItems);
   }
 
   return (
@@ -3095,30 +3238,50 @@ function SiteFieldsPane({ siteFields, formFieldKeys, webhookUrl, onUpdate, onRem
         Useful for data your site already knows: a chosen package, a referral source, etc.
       </p>
 
-      {/* Quick-add for landscaping pro variables. The /landscaping
-          contact form attaches all of these automatically; this
-          surface lets the operator drop them onto the form so they
-          appear as merge tags / picker options across the canvas. */}
+      {/* Quick-add presets — packs of common field suggestions. The
+          user picks the pack that matches their business. "Common"
+          is the universal default; landscaping is kept for back-compat. */}
       <div className="fb-sf-presets" style={{
-        background:"#ecfdf5",
-        border:"1px solid #a7f3d0",
+        background:"var(--fbc-ecfdf5)",
+        border:"1px solid var(--fbc-a7f3d0)",
         borderRadius:10,
         padding:"10px 12px",
         marginBottom:12,
       }}>
-        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
-          <span style={{fontSize:18}} aria-hidden="true">🌿</span>
-          <strong style={{fontSize:13.5,color:"#13401f"}}>Landscaping pro variables</strong>
-          <span style={{fontSize:11.5,color:"#2f8048",fontWeight:500,marginLeft:"auto"}}>
+        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6,flexWrap:"wrap"}}>
+          <span style={{fontSize:18}} aria-hidden="true">
+            {activePack === "landscaping" ? "🌿" : "📋"}
+          </span>
+          <strong style={{fontSize:13.5,color:"var(--fbc-13401f)"}}>
+            {PRESET_PACKS[activePack].label}
+          </strong>
+          <select
+            value={activePack}
+            onChange={(e) => pickPack(e.target.value)}
+            title="Pick the field bundle that matches your business"
+            style={{
+              marginLeft:6, padding:"3px 8px", borderRadius:6,
+              border:"1px solid var(--fbc-a7f3d0)", background:"var(--fbc-fff)",
+              fontSize:11.5, fontWeight:600, color:"var(--fbc-13401f)",
+              fontFamily:"inherit", cursor:"pointer",
+            }}
+          >
+            {Object.entries(PRESET_PACKS).map(function (entry) {
+              var id = entry[0], pack = entry[1];
+              return <option key={id} value={id}>{pack.label}</option>;
+            })}
+          </select>
+          <span style={{fontSize:11.5,color:"var(--fbc-2f8048)",fontWeight:500,marginLeft:"auto"}}>
             {allPresetsAdded
               ? "All added ✓"
-              : `${LANDSCAPING_PRO_PRESETS.length - availablePresets.length} of ${LANDSCAPING_PRO_PRESETS.length} added`}
+              : `${packItems.length - availablePresets.length} of ${packItems.length} added`}
           </span>
         </div>
-        <p className="fb-helper-tight" style={{margin:"0 0 8px",fontSize:12,color:"#1f5f35"}}>
-          The /landscaping contact form attaches these about the picked landscaper.
-          Add them here so they show up as <code>{"{merge_tags}"}</code> and in the
-          recipient / sheet-column pickers across the canvas.
+        <p className="fb-helper-tight" style={{margin:"0 0 8px",fontSize:12,color:"var(--fbc-1f5f35)"}}>
+          {PRESET_PACKS[activePack].sub}{" "}
+          Click a chip to add it as a site field — it'll then show up
+          as <code>{"{merge_tags}"}</code> and in the recipient /
+          sheet-column pickers across the canvas.
         </p>
         {availablePresets.length > 0 ? (
           <>
@@ -3131,9 +3294,9 @@ function SiteFieldsPane({ siteFields, formFieldKeys, webhookUrl, onUpdate, onRem
                   onClick={() => addOnePreset(p)}
                   title={`Add ${p.key}`}
                   style={{
-                    background:"#fff",
-                    color:"#13401f",
-                    border:"1px solid #a7f3d0",
+                    background:"var(--fbc-fff)",
+                    color:"var(--fbc-13401f)",
+                    border:"1px solid var(--fbc-a7f3d0)",
                     borderRadius:999,
                     padding:"4px 10px",
                     fontSize:11.5,
@@ -3148,10 +3311,10 @@ function SiteFieldsPane({ siteFields, formFieldKeys, webhookUrl, onUpdate, onRem
             </div>
             <button
               type="button"
-              onClick={addAllLandscapingPresets}
+              onClick={addAllPackPresets}
               style={{
-                background:"#1f5f35",
-                color:"#fff",
+                background:"var(--fbc-1f5f35)",
+                color:"var(--fbc-fff)",
                 border:"none",
                 borderRadius:8,
                 padding:"7px 14px",
@@ -3161,12 +3324,12 @@ function SiteFieldsPane({ siteFields, formFieldKeys, webhookUrl, onUpdate, onRem
                 fontFamily:"inherit",
               }}
             >
-              + Add all {availablePresets.length} landscaping pro fields
+              + Add all {availablePresets.length} fields
             </button>
           </>
         ) : (
-          <p className="fb-helper-tight" style={{margin:0,fontSize:12,color:"#2f8048"}}>
-            All landscaping pro variables are on the form already.
+          <p className="fb-helper-tight" style={{margin:0,fontSize:12,color:"var(--fbc-2f8048)"}}>
+            All {PRESET_PACKS[activePack].label.toLowerCase()} are on the form already.
           </p>
         )}
       </div>
@@ -3302,8 +3465,8 @@ function FormPreview({ activeForm, name, fields }) {
   }
   const inStyle = {
     width: "100%", padding: "10px 12px",
-    border: "1px solid #e6e6ea", borderRadius: 8,
-    fontSize: 14, background: "#fff", color: "#777",
+    border: "1px solid var(--fbc-e6e6ea)", borderRadius: 8,
+    fontSize: 14, background: "var(--fbc-fff)", color: "var(--fbc-777)",
     boxSizing: "border-box", fontFamily: "inherit",
   };
   return (
@@ -3657,6 +3820,182 @@ function VariablePicker({ open, anchor, onPick, onClose, tags, usedTokens }) {
 }
 
 // ── Message editor drawer ───────────────────────────────────────────────
+// ── Follow-up steps panel ──────────────────────────────────────────────
+// Rendered inside the drawer for the "Follow-up message" activity. A
+// compact, Instantly-style list of step cards — one follow-up, or a
+// whole series. Only the SELECTED step shows its editor; the rest stay
+// collapsed so the panel never overwhelms. Writes `data.steps`; the
+// engine reads that array (1 step = a plain follow-up, many = a
+// sequence). Stop conditions use sensible backend defaults — kept off
+// this panel intentionally to keep it simple.
+function FollowUpStepsPanel({ nodeId, data, onChange }) {
+  const MAX_STEPS = 7;
+  // Seed from an existing steps array, else from the legacy single-
+  // message fields so an already-built node migrates seamlessly.
+  const [steps, setSteps] = React.useState(() => {
+    if (Array.isArray(data.steps) && data.steps.length)
+      return data.steps.map(s => ({ ...s }));
+    return [{
+      step_id: "fu_" + Math.random().toString(36).slice(2, 8),
+      step_number: 1, wait_days_from_previous: 0,
+      channel: data.mode === "sms" ? "sms" : "email",
+      subject: data.subject || "",
+      body: data.body || "",
+    }];
+  });
+  const [sel, setSel] = React.useState(0);
+
+  React.useEffect(() => {
+    onChange(nodeId, { steps });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [steps]);
+
+  const patch = (i, p) =>
+    setSteps(c => c.map((s, idx) => idx === i ? { ...s, ...p } : s));
+  const addStep = () => setSteps(c => {
+    if (c.length >= MAX_STEPS) return c;
+    const last = c[c.length - 1];
+    const ch = last && last.channel === "email" ? "sms" : "email";
+    setSel(c.length);
+    return [...c, {
+      step_id: "fu_" + Math.random().toString(36).slice(2, 8),
+      step_number: c.length + 1, wait_days_from_previous: 3, channel: ch,
+      subject: ch === "email" ? "Following up, {first_name}" : "",
+      body: "Hi {first_name}, just checking back in about {service_type}. — {owner_name}",
+    }];
+  });
+  const removeStep = (i) => setSteps(c => {
+    const n = c.filter((_, idx) => idx !== i).map((s, idx) => ({
+      ...s, step_number: idx + 1,
+      wait_days_from_previous: idx === 0 ? 0 : s.wait_days_from_previous,
+    }));
+    setSel(s => Math.max(0, Math.min(s, n.length - 1)));
+    return n;
+  });
+
+  const stepTitle = (s) => {
+    if ((s.channel || "email") === "email")
+      return (s.subject || "").trim() || "Untitled email";
+    return ((s.body || "").split("\n")[0] || "").trim() || "Text message";
+  };
+  const timing = (i) => i === 0
+    ? "Sends immediately"
+    : `${Number(steps[i].wait_days_from_previous) || 0} day(s) after the previous step`;
+
+  const numStyle = {
+    width: 56, padding: "5px 8px", borderRadius: 6,
+    border: "1px solid var(--fbc-cbd5e1)", background: "var(--fbc-fff)",
+    color: "inherit", fontFamily: "inherit", fontSize: 12.5,
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      {steps.map((s, i) => {
+        const ch = s.channel || "email";
+        const active = sel === i;
+        const err = !(s.body || "").trim()
+          || (ch === "email" && !(s.subject || "").trim());
+        return (
+          <div key={s.step_id || i} style={{
+              border: "1px solid " + (active ? "#2563eb" : "var(--fbc-e5e7eb)"),
+              borderRadius: 10, background: "var(--fbc-fff)",
+              boxShadow: active ? "0 0 0 3px rgba(37,99,235,0.12)" : "none" }}>
+            <button type="button" onClick={() => setSel(active ? -1 : i)}
+              style={{ width: "100%", textAlign: "left", border: 0, cursor: "pointer",
+                background: "transparent", color: "inherit", padding: "10px 12px",
+                display: "flex", flexDirection: "column", gap: 3,
+                fontFamily: "inherit" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: ".06em",
+                                color: "var(--fbc-94a3b8)" }}>STEP {i + 1}</span>
+                <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: ".05em",
+                  padding: "2px 7px", borderRadius: 999,
+                  background: ch === "sms" ? "rgba(124,58,237,0.13)" : "rgba(37,99,235,0.13)",
+                  color: ch === "sms" ? "#7c3aed" : "#2563eb" }}>
+                  {ch === "sms" ? "TEXT" : "EMAIL"}
+                </span>
+                <span style={{ flex: 1 }} />
+                {err && <span title="Add a subject or message"
+                  style={{ color: "#dc2626", fontSize: 12 }}>⚠</span>}
+                {steps.length > 1 && (
+                  <span role="button" title="Remove step"
+                    onClick={(e) => { e.stopPropagation(); removeStep(i); }}
+                    style={{ color: "var(--fbc-94a3b8)", fontSize: 13,
+                             cursor: "pointer" }}>🗑</span>
+                )}
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 600, whiteSpace: "nowrap",
+                            overflow: "hidden", textOverflow: "ellipsis" }}>
+                {stepTitle(s)}
+              </div>
+              <div style={{ fontSize: 11.5, color: "var(--fbc-94a3b8)" }}>{timing(i)}</div>
+            </button>
+            {active && (
+              <div style={{ padding: "10px 12px 12px", display: "flex",
+                            flexDirection: "column", gap: 10,
+                            borderTop: "1px solid var(--fbc-f1f5f9)" }}>
+                <div style={{ display: "flex", gap: 6 }}>
+                  {[["email", "✉️ Email"], ["sms", "💬 Text"]].map(([c, lbl]) => (
+                    <button key={c} type="button"
+                      onClick={() => patch(i, { channel: c })}
+                      style={{ flex: 1, padding: "6px", borderRadius: 7, cursor: "pointer",
+                        border: "1px solid " + (ch === c ? "#2563eb" : "var(--fbc-cbd5e1)"),
+                        background: ch === c ? "rgba(37,99,235,0.10)" : "var(--fbc-fff)",
+                        color: "inherit", fontSize: 12,
+                        fontWeight: ch === c ? 600 : 400 }}>
+                      {lbl}
+                    </button>
+                  ))}
+                </div>
+                {i > 0 && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 8,
+                                fontSize: 12.5, flexWrap: "wrap" }}>
+                    <span>Send</span>
+                    <input type="number" min={1} max={90} style={numStyle}
+                      value={s.wait_days_from_previous || 0}
+                      onChange={(e) => patch(i, {
+                        wait_days_from_previous: Number(e.target.value) })} />
+                    <span>day(s) after the previous step</span>
+                  </div>
+                )}
+                {ch === "email" && (
+                  <input className="fb-input" value={s.subject || ""}
+                    onChange={(e) => patch(i, { subject: e.target.value })}
+                    placeholder="Subject" />
+                )}
+                <textarea className="fb-textarea" rows={5} value={s.body || ""}
+                  onChange={(e) => patch(i, { body: e.target.value })}
+                  placeholder="Write your message — use {first_name}, {business_name}, {owner_name}…"
+                  style={{ width: "100%", boxSizing: "border-box", fontSize: 13,
+                           lineHeight: 1.45, resize: "vertical" }} />
+                {ch === "sms" && (
+                  <div style={{ fontSize: 11, color: "var(--fbc-94a3b8)" }}>
+                    {(s.body || "").length}/160 ·{" "}
+                    {Math.max(1, Math.ceil((s.body || "").length / 160))} segment(s)
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      {steps.length < MAX_STEPS && (
+        <button type="button" onClick={addStep}
+          style={{ padding: "10px", borderRadius: 10, cursor: "pointer",
+            border: "1.5px dashed var(--fbc-cbd5e1)", background: "transparent",
+            color: "#2563eb", fontWeight: 600, fontSize: 12.5 }}>
+          + Add follow-up step
+        </button>
+      )}
+
+      <div style={{ fontSize: 11.5, color: "var(--fbc-94a3b8)", lineHeight: 1.45 }}>
+        The follow-ups stop automatically the moment the lead replies.
+      </div>
+    </div>
+  );
+}
+
 function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
   // Local state mirrors node.data so typing is responsive; we propagate
   // every change up via onChange so the canvas card + preview stay in sync.
@@ -3675,6 +4014,14 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
     data.body != null ? data.body : (activity.defaultBody || ""));
   const [waitDays, setWaitDays] = React.useState(
     data.waitDays != null ? data.waitDays : (activity.defaultDurationDays || 1));
+  // Wait block — minutes-based duration. Storage is normalized to
+  // minutes; the drawer below lets the user enter a value + unit
+  // (minutes / hours / days). Migrates a legacy day-only config.
+  const [waitMinutes, setWaitMinutes] = React.useState(() => {
+    if (data.wait_minutes != null) return Number(data.wait_minutes) || 60;
+    if (data.waitDays != null) return Math.round(Number(data.waitDays) * 1440) || 60;
+    return activity.defaultWaitMinutes || 60;
+  });
   const [conditionId, setConditionId] = React.useState(
     data.conditionId || activity.defaultConditionId || BRANCH_CONDITIONS[0].id);
   // Reply Widget state — only meaningful when isReply. Cadence is
@@ -3682,6 +4029,20 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
   // don't track per-step overrides — we just read and display them.
   const [fallback, setFallback] = React.useState(
     data.fallback || activity.defaultFallback || "ai");
+  // Reply block — "Detect calendar events" toggle. When on, every AI
+  // email reply is run through a meeting-confirmation classifier and
+  // confirmed meetings are auto-added to the owner's Google Calendar.
+  const [detectCalendar, setDetectCalendar] = React.useState(
+    data.detect_calendar_events != null ? !!data.detect_calendar_events : false);
+  // "auto" — confirmed meetings are added to the calendar automatically.
+  // "suggest" — the owner is emailed the suggestion and adds it themselves.
+  const [calendarMode, setCalendarMode] = React.useState(
+    data.calendar_mode === "suggest" ? "suggest" : "auto");
+  // AI Draft Mode — "auto_send" sends the AI reply immediately;
+  // "draft_for_review" turns it into a Gmail draft + an approval-queue
+  // entry the owner sends.
+  const [deliveryMode, setDeliveryMode] = React.useState(
+    data.delivery_mode === "draft_for_review" ? "draft_for_review" : "auto_send");
   // Reply agent state (Phase 1 of the Reply Block redesign). When the
   // owner picks "{Bot} replies" the chosen agent's id+name+job get
   // stamped on the node so the engine (Phase 2) can assemble runtime
@@ -3711,6 +4072,13 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
   const isSendEmail  = activity.id === "send_email";
   const isAppendSheet = activity.id === "append_sheet";
   const isAiAgent    = activity.id === "ai_agent";
+  const isFollowUp   = activity.id === "follow_up_message";
+  // Reply-branch-capable activities (Reach out + Introductory email +
+  // Follow-up message). Drives the "Wait for them to reply, then
+  // continue" section and the reply / no-reply branch split. Reach out
+  // also sets isReachOut for its multi-channel / call-specific UI;
+  // this flag is the broader gate that the new activities share.
+  const supportsWaitForReply = !!activity.supportsWaitForReply;
 
   // ── Google Sheet drawer state ──────────────────────────────────
   // Editable: spreadsheet URL/ID, worksheet/tab name, ordered column
@@ -3876,6 +4244,23 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
   // this on the compile side (the owner wants paged any time).
   const [respectBusinessHours, setRespectBusinessHours] = React.useState(
     data.respect_business_hours != null ? !!data.respect_business_hours : true);
+
+  // ── Two-way conversation Phase 2: wait-for-reply ──────────────────
+  // When enabled on a Reach out block, the flow pauses at this step
+  // after sending until the customer replies (or timeout). The reply
+  // text becomes {customer_reply} for downstream blocks.
+  const [waitForReply, setWaitForReply] = React.useState(
+    data.wait_for_reply != null ? !!data.wait_for_reply : false);
+  const [waitTimeoutSeconds, setWaitTimeoutSeconds] = React.useState(
+    Number(data.wait_timeout_seconds) > 0
+      ? Number(data.wait_timeout_seconds)
+      : 3 * 24 * 60 * 60);  // default 3 days
+  const [waitTimeoutAction, setWaitTimeoutAction] = React.useState(
+    (data.wait_timeout_action || "end").toString());
+  // Multi-turn loop cap. Only meaningful on Reply blocks (where the
+  // wait + send forms a back-and-forth loop). Default 5 turns.
+  const [maxReplies, setMaxReplies] = React.useState(
+    Number(data.max_replies) > 0 ? Number(data.max_replies) : 5);
   const callMsgRef = React.useRef(null);
   // ── Live voice preview ──────────────────────────────────────────
   // Lets the owner hear EXACTLY how the AI's voice will sound on a
@@ -4273,6 +4658,9 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
       mode: legacyMode,
       modes: isMultiChannel ? modes : undefined,
       subject, body, waitDays, conditionId,
+      // Wait block duration, normalized to minutes (engine converts
+      // to seconds at compile time). Kept alongside legacy waitDays.
+      wait_minutes: waitMinutes,
       fallback,
       // Reply-only fields: the agent picked to draft AI replies, plus
       // the approval mode (auto-send vs draft-for-review).
@@ -4281,6 +4669,9 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
       reply_agent_job:  replyAgentJob,
       reply_approval:   replyApproval,
       reply_channel:    replyChannel,
+      detect_calendar_events: detectCalendar,
+      calendar_mode:    calendarMode,
+      delivery_mode:    deliveryMode,
       // Notify-only fields. Always emitted (no-op for non-notify steps,
       // ignored by the engine for those types). snake_case so the
       // server reads node.data verbatim — no shape translation needed.
@@ -4298,6 +4689,12 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
       voice_tone:      callVoiceTone,
       call_target:     callTarget,
       respect_business_hours: respectBusinessHours,
+      // Phase 2 wait-for-reply config. Only meaningful on the Reach
+      // out activity; harmless on other steps (engine just ignores).
+      wait_for_reply:        waitForReply,
+      wait_timeout_seconds:  waitTimeoutSeconds,
+      wait_timeout_action:   waitTimeoutAction,
+      max_replies:           maxReplies,
       // Standalone Email activity recipient picker.
       recipient_source: emailRecipientSource,
       recipient_value:  emailRecipientValue,
@@ -4309,10 +4706,12 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
       columns:            sheetColumns,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, modes, subject, body, waitDays, conditionId, fallback,
+  }, [mode, modes, subject, body, waitDays, waitMinutes, conditionId, fallback,
       replyAgentId, replyAgentName, replyAgentJob, replyApproval, replyChannel,
+      detectCalendar, calendarMode, deliveryMode,
       includeCustomer, extraPhones, extraEmails, defaultDismissed,
       callPhone, callMessage, callVoiceTone, callTarget, respectBusinessHours,
+      waitForReply, waitTimeoutSeconds, waitTimeoutAction, maxReplies,
       emailRecipientSource, emailRecipientValue,
       sheetSpreadsheetId, sheetWorksheetName, sheetEnsureHeader, sheetColumns]);
 
@@ -4444,7 +4843,7 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
           >×</button>
         </header>
 
-        <div className={`fb-drawer-body ${isInput || isCall || isAiAgent ? "is-no-preview" : ""} ${previewCollapsed && !isInput && !isCall && !isAiAgent ? "is-preview-collapsed" : ""}`}>
+        <div className={`fb-drawer-body ${isInput || isCall || isAiAgent || isFollowUp ? "is-no-preview" : ""} ${previewCollapsed && !isInput && !isCall && !isAiAgent && !isFollowUp ? "is-preview-collapsed" : ""}`}>
           <div className="fb-drawer-edit">
             {/* Per-activity settings: rename + describe. Override the
                 default title (shown in the drawer header + on the
@@ -4452,16 +4851,16 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                 replaces the default subtitle. Collapsed by default
                 so the activity-specific config still owns the surface. */}
             <details className="fb-activity-settings"
-                     style={{ marginBottom: 14, border: "1px solid #e5e7eb",
-                              borderRadius: 8, background: "#fafbfc" }}>
+                     style={{ marginBottom: 14, border: "1px solid var(--fbc-e5e7eb)",
+                              borderRadius: 8, background: "var(--fbc-fafbfc)" }}>
               <summary style={{ padding: "9px 12px", cursor: "pointer",
-                                fontSize: 12, fontWeight: 700, color: "#475569",
+                                fontSize: 12, fontWeight: 700, color: "var(--fbc-475569)",
                                 textTransform: "uppercase", letterSpacing: ".04em",
                                 listStyle: "none", display: "flex",
                                 alignItems: "center", gap: 6 }}>
                 <span aria-hidden="true">⚙</span>
                 <span>Settings</span>
-                <span style={{ marginLeft: "auto", color: "#94a3b8",
+                <span style={{ marginLeft: "auto", color: "var(--fbc-94a3b8)",
                                textTransform: "none", fontWeight: 500,
                                fontSize: 11, letterSpacing: 0 }}>
                   Rename · Describe
@@ -4471,7 +4870,7 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                             display: "flex", flexDirection: "column", gap: 10 }}>
                 <label style={{ display: "block" }}>
                   <span style={{ display: "block", fontSize: 11.5, fontWeight: 600,
-                                  color: "#64748b", marginBottom: 4 }}>
+                                  color: "var(--fbc-64748b)", marginBottom: 4 }}>
                     Activity name
                   </span>
                   <input type="text"
@@ -4480,12 +4879,12 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                     maxLength={120}
                     onChange={(e) => onChange(node.id, { title: e.target.value })}
                     style={{ width: "100%", padding: "8px 10px",
-                              border: "1px solid #cbd5e1", borderRadius: 6,
+                              border: "1px solid var(--fbc-cbd5e1)", borderRadius: 6,
                               fontSize: 13, fontFamily: "inherit",
-                              background: "#fff", outline: "none",
+                              background: "var(--fbc-fff)", outline: "none",
                               boxSizing: "border-box" }}
                   />
-                  <span style={{ fontSize: 11, color: "#94a3b8", marginTop: 4,
+                  <span style={{ fontSize: 11, color: "var(--fbc-94a3b8)", marginTop: 4,
                                   display: "block" }}>
                     Shows in the canvas node and the drawer header. Leave
                     blank to use the default ({activity.title}).
@@ -4493,7 +4892,7 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                 </label>
                 <label style={{ display: "block" }}>
                   <span style={{ display: "block", fontSize: 11.5, fontWeight: 600,
-                                  color: "#64748b", marginBottom: 4 }}>
+                                  color: "var(--fbc-64748b)", marginBottom: 4 }}>
                     Description
                   </span>
                   <textarea
@@ -4503,13 +4902,13 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                     rows={3}
                     onChange={(e) => onChange(node.id, { description: e.target.value })}
                     style={{ width: "100%", padding: "8px 10px",
-                              border: "1px solid #cbd5e1", borderRadius: 6,
+                              border: "1px solid var(--fbc-cbd5e1)", borderRadius: 6,
                               fontSize: 13, fontFamily: "inherit",
-                              background: "#fff", outline: "none",
+                              background: "var(--fbc-fff)", outline: "none",
                               resize: "vertical", lineHeight: 1.45,
                               boxSizing: "border-box" }}
                   />
-                  <span style={{ fontSize: 11, color: "#94a3b8", marginTop: 4,
+                  <span style={{ fontSize: 11, color: "var(--fbc-94a3b8)", marginTop: 4,
                                   display: "block" }}>
                     Replaces the default subtitle on the canvas node.
                   </span>
@@ -4525,6 +4924,12 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
               />
             ) : isAiAgent ? (
               <AiAgentPanel
+                nodeId={node.id}
+                data={data}
+                onChange={onChange}
+              />
+            ) : isFollowUp ? (
+              <FollowUpStepsPanel
                 nodeId={node.id}
                 data={data}
                 onChange={onChange}
@@ -4564,27 +4969,90 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                 </p>
               </div>
             ) : isWait ? (
-              <div>
-                <label className="fb-drawer-l">Wait for</label>
-                <div className="fb-wait-row">
-                  <input
-                    type="number"
-                    min="0"
-                    max="60"
-                    className="fb-input fb-wait-num"
-                    value={waitDays}
-                    onChange={(e) => setWaitDays(Math.max(0,
-                      Math.min(60, parseInt(e.target.value || "0", 10))))}
-                  />
-                  <span className="fb-wait-unit">
-                    day{waitDays === 1 ? "" : "s"} before the next step
-                  </span>
-                </div>
-                <p className="fb-helper">
-                  This step doesn't send anything — it just pauses your flow.
-                </p>
-              </div>
+              (() => {
+                // Wait block — minutes/hours/days picker. Stored as
+                // minutes (waitMinutes). 1-minute floor, 30-day ceiling.
+                const MIN_M = 1, MAX_M = 30 * 24 * 60;
+                const PRESETS = [
+                  ["5 min",  5],
+                  ["15 min", 15],
+                  ["1 hour", 60],
+                  ["3 hours", 180],
+                  ["1 day",  1440],
+                  ["3 days", 4320],
+                  ["1 week", 10080],
+                ];
+                // Pick the friendliest unit for the current value.
+                let unit = "minutes", val = waitMinutes;
+                if (waitMinutes % 1440 === 0 && waitMinutes >= 1440) {
+                  unit = "days"; val = waitMinutes / 1440;
+                } else if (waitMinutes % 60 === 0 && waitMinutes >= 60) {
+                  unit = "hours"; val = waitMinutes / 60;
+                }
+                const applyCustom = (rawVal, rawUnit) => {
+                  const n = Math.max(0, Number(rawVal) || 0);
+                  const mult = rawUnit === "days" ? 1440
+                             : rawUnit === "hours" ? 60 : 1;
+                  let m = Math.round(n * mult);
+                  m = Math.max(MIN_M, Math.min(MAX_M, m));
+                  setWaitMinutes(m);
+                };
+                const human = (m) => {
+                  if (m % 1440 === 0) { const d = m / 1440; return `${d} day${d === 1 ? "" : "s"}`; }
+                  if (m % 60 === 0)   { const h = m / 60;   return `${h} hour${h === 1 ? "" : "s"}`; }
+                  return `${m} minute${m === 1 ? "" : "s"}`;
+                };
+                return (
+                  <div>
+                    <label className="fb-drawer-l">How long should we wait?</label>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6,
+                                    margin: "6px 0 12px" }}>
+                      {PRESETS.map(([label, m]) => (
+                        <button
+                          key={m}
+                          type="button"
+                          onClick={() => setWaitMinutes(m)}
+                          style={{
+                            padding: "5px 11px", borderRadius: 999,
+                            fontSize: 12.5, fontWeight: 600, cursor: "pointer",
+                            border: "1px solid " + (waitMinutes === m ? "var(--fbc-4f46e5)" : "var(--fbc-cbd5e1)"),
+                            background: waitMinutes === m ? "var(--fbc-eef2ff)" : "var(--fbc-fff)",
+                            color: waitMinutes === m ? "var(--fbc-3730a3)" : "var(--fbc-475569)",
+                            fontFamily: "inherit",
+                          }}
+                        >{label}</button>
+                      ))}
+                    </div>
+                    <label className="fb-drawer-l">Or set a custom time</label>
+                    <div className="fb-wait-row" style={{ marginTop: 6 }}>
+                      <input
+                        type="number"
+                        min="1"
+                        className="fb-input fb-wait-num"
+                        value={val}
+                        onChange={(e) => applyCustom(e.target.value, unit)}
+                      />
+                      <select
+                        className="fb-input"
+                        value={unit}
+                        onChange={(e) => applyCustom(val, e.target.value)}
+                        style={{ width: "auto", padding: "6px 8px" }}
+                      >
+                        <option value="minutes">minutes</option>
+                        <option value="hours">hours</option>
+                        <option value="days">days</option>
+                      </select>
+                    </div>
+                    <p className="fb-helper" style={{ marginTop: 10 }}>
+                      The flow pauses for <strong>{human(waitMinutes)}</strong> at
+                      this step, then continues. Resume timing can vary by up
+                      to a minute. Max wait is 30 days.
+                    </p>
+                  </div>
+                );
+              })()
             ) : isReply ? (
+              <>
               <ReplyWidgetEditor
                 fallback={fallback} setFallback={setFallback}
                 body={body} setBody={setBody}
@@ -4607,6 +5075,83 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                 replyChannel={replyChannel}
                 setReplyChannel={setReplyChannel}
               />
+              {/* AI Draft Mode — send automatically vs draft for review. */}
+              <div style={{ marginTop: 14, padding: "12px 14px",
+                  border: "1px solid var(--fbc-e5e7eb)", borderRadius: 10,
+                  background: "var(--fbc-fff)" }}>
+                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
+                  How should AI replies be delivered?
+                </div>
+                {[["auto_send", "Send automatically",
+                   "The AI reply goes straight to the customer."],
+                  ["draft_for_review", "Draft for my review",
+                   "The reply becomes a draft in your Gmail thread and a card in Pending Approvals — nothing sends until you approve it."]
+                 ].map(([val, label, sub]) => (
+                  <label key={val} style={{ display: "flex", gap: 8,
+                      alignItems: "flex-start", cursor: "pointer",
+                      padding: "4px 0" }}>
+                    <input type="radio" name="fb-delivery-mode"
+                      checked={deliveryMode === val}
+                      onChange={() => setDeliveryMode(val)}
+                      style={{ marginTop: 2 }} />
+                    <span style={{ fontSize: 12.5, lineHeight: 1.4 }}>
+                      <strong>{label}</strong>
+                      <span style={{ display: "block",
+                          color: "var(--fbc-94a3b8)", marginTop: 1 }}>
+                        {sub}
+                      </span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+              {/* Detect calendar events — runs a meeting-confirmation
+                  check on every AI email reply; confirmed meetings are
+                  auto-added to the owner's Google Calendar. */}
+              <div style={{ marginTop: 14, padding: "12px 14px",
+                  border: "1px solid var(--fbc-e5e7eb)", borderRadius: 10,
+                  background: "var(--fbc-fff)" }}>
+                <label style={{ display: "flex", gap: 10, alignItems: "flex-start",
+                    cursor: "pointer" }}>
+                  <input type="checkbox" checked={detectCalendar}
+                    onChange={(e) => setDetectCalendar(e.target.checked)}
+                    style={{ marginTop: 2 }} />
+                  <span style={{ fontSize: 13, lineHeight: 1.45 }}>
+                    <strong>📅 Detect calendar events</strong>
+                    <span style={{ display: "block", color: "var(--fbc-64748b)",
+                        marginTop: 3 }}>
+                      After each email reply, check whether the customer and
+                      the bot confirmed a meeting. Needs Google Calendar
+                      connected in Settings.
+                    </span>
+                  </span>
+                </label>
+                {detectCalendar && (
+                  <div style={{ marginTop: 10, paddingLeft: 28,
+                      display: "flex", flexDirection: "column", gap: 6 }}>
+                    {[["auto", "Add it to my calendar automatically",
+                       "Confirmed meetings appear on your Google Calendar; you get a heads-up email."],
+                      ["suggest", "Just suggest it — I'll add it myself",
+                       "You get an email with the meeting details; nothing touches your calendar."]
+                     ].map(([val, label, sub]) => (
+                      <label key={val} style={{ display: "flex", gap: 8,
+                          alignItems: "flex-start", cursor: "pointer" }}>
+                        <input type="radio" name="fb-calmode"
+                          checked={calendarMode === val}
+                          onChange={() => setCalendarMode(val)}
+                          style={{ marginTop: 2 }} />
+                        <span style={{ fontSize: 12.5, lineHeight: 1.4 }}>
+                          <strong>{label}</strong>
+                          <span style={{ display: "block",
+                              color: "var(--fbc-94a3b8)", marginTop: 1 }}>
+                            {sub}
+                          </span>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+              </>
             ) : isCall ? (
               <div className="fb-call-panel">
                 {/* Step 1 — who to call. Mirror of the Email recipient
@@ -5161,8 +5706,8 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                     <div style={{
                       display:"flex",alignItems:"center",gap:10,
                       padding:"10px 12px",borderRadius:10,
-                      background: sheetsConn.connected ? "#ecfdf5" : "#fffbeb",
-                      border:"1px solid " + (sheetsConn.connected ? "#a7f3d0" : "#fde68a"),
+                      background: sheetsConn.connected ? "var(--fbc-ecfdf5)" : "var(--fbc-fffbeb)",
+                      border:"1px solid " + (sheetsConn.connected ? "var(--fbc-a7f3d0)" : "var(--fbc-fde68a)"),
                     }}>
                       <span style={{fontSize:18}} aria-hidden="true">
                         {sheetsConn.connected ? "✓" : "🔗"}
@@ -5170,19 +5715,19 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                       <div style={{flex:1,minWidth:0}}>
                         {sheetsConn.connected ? (
                           <>
-                            <div style={{fontSize:13,fontWeight:700,color:"#13401f"}}>
+                            <div style={{fontSize:13,fontWeight:700,color:"var(--fbc-13401f)"}}>
                               Connected to Google
                             </div>
-                            <div style={{fontSize:11.5,color:"#1f5f35",fontFamily:"ui-monospace, SFMono-Regular, Menlo, monospace",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                            <div style={{fontSize:11.5,color:"var(--fbc-1f5f35)",fontFamily:"ui-monospace, SFMono-Regular, Menlo, monospace",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
                               {sheetsConn.google_email || "(unknown account)"}
                             </div>
                           </>
                         ) : (
                           <>
-                            <div style={{fontSize:13,fontWeight:700,color:"#78350f"}}>
+                            <div style={{fontSize:13,fontWeight:700,color:"var(--fbc-78350f)"}}>
                               Connect a Google account to write rows
                             </div>
-                            <div style={{fontSize:11.5,color:"#92400e"}}>
+                            <div style={{fontSize:11.5,color:"var(--fbc-92400e)"}}>
                               {sheetsConn.ready
                                 ? "Sign in once. We use it to append rows to your sheets."
                                 : "(Server not configured for OAuth — set EMAIL_TOKEN_ENCRYPTION_KEY.)"}
@@ -5194,20 +5739,20 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                         <button
                           type="button"
                           onClick={disconnectSheetsOAuth}
-                          style={{background:"transparent",color:"#92400e",border:"1px solid #d8e2d4",borderRadius:8,padding:"6px 10px",fontSize:12,fontWeight:600,cursor:"pointer"}}
+                          style={{background:"transparent",color:"var(--fbc-92400e)",border:"1px solid var(--fbc-d8e2d4)",borderRadius:8,padding:"6px 10px",fontSize:12,fontWeight:600,cursor:"pointer"}}
                         >Disconnect</button>
                       ) : (
                         <button
                           type="button"
                           onClick={startSheetsOAuth}
                           disabled={!sheetsConn.ready || sheetsConn.loading}
-                          style={{background:"#1f5f35",color:"#fff",border:"none",borderRadius:8,padding:"7px 14px",fontSize:12.5,fontWeight:700,cursor:sheetsConn.ready?"pointer":"not-allowed",opacity:sheetsConn.ready?1:0.55}}
+                          style={{background:"var(--fbc-1f5f35)",color:"var(--fbc-fff)",border:"none",borderRadius:8,padding:"7px 14px",fontSize:12.5,fontWeight:700,cursor:sheetsConn.ready?"pointer":"not-allowed",opacity:sheetsConn.ready?1:0.55}}
                         >
                           {sheetsConn.loading ? "Checking…" : "Connect Google Sheets"}
                         </button>
                       )}
                     </div>
-                    <label style={{display:"flex",flexDirection:"column",gap:4,fontSize:13,fontWeight:600,color:"#2e4238"}}>
+                    <label style={{display:"flex",flexDirection:"column",gap:4,fontSize:13,fontWeight:600,color:"var(--fbc-2e4238)"}}>
                       <span>Google Sheet URL or ID</span>
                       <input
                         type="text"
@@ -5219,11 +5764,11 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                         autoCorrect="off"
                         spellCheck={false}
                       />
-                      <span style={{fontWeight:500,fontSize:12,color:"#5f6f66"}}>
+                      <span style={{fontWeight:500,fontSize:12,color:"var(--fbc-5f6f66)"}}>
                         Share the sheet with the service account that runs your CRM, with Editor access.
                       </span>
                     </label>
-                    <label style={{display:"flex",flexDirection:"column",gap:4,fontSize:13,fontWeight:600,color:"#2e4238"}}>
+                    <label style={{display:"flex",flexDirection:"column",gap:4,fontSize:13,fontWeight:600,color:"var(--fbc-2e4238)"}}>
                       <span>Worksheet (tab) name</span>
                       <input
                         type="text"
@@ -5236,7 +5781,7 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                         spellCheck={false}
                       />
                     </label>
-                    <label style={{display:"inline-flex",alignItems:"center",gap:8,fontSize:13,fontWeight:500,color:"#2e4238",cursor:"pointer"}}>
+                    <label style={{display:"inline-flex",alignItems:"center",gap:8,fontSize:13,fontWeight:500,color:"var(--fbc-2e4238)",cursor:"pointer"}}>
                       <input
                         type="checkbox"
                         checked={!!sheetEnsureHeader}
@@ -5245,10 +5790,10 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                       <span>Auto-write the header row if the sheet is empty</span>
                     </label>
                     <div style={{marginTop:6}}>
-                      <div style={{fontSize:13,fontWeight:700,color:"#2e4238",marginBottom:6}}>
+                      <div style={{fontSize:13,fontWeight:700,color:"var(--fbc-2e4238)",marginBottom:6}}>
                         Columns (each row = one column in the sheet)
                       </div>
-                      <div style={{fontSize:11.5,color:"#5f6f66",marginBottom:8,lineHeight:1.45}}>
+                      <div style={{fontSize:11.5,color:"var(--fbc-5f6f66)",marginBottom:8,lineHeight:1.45}}>
                         Use <code>{"{merge_tags}"}</code> like <code>{"{name}"}</code>,{" "}
                         <code>{"{email}"}</code>, <code>{"{landscape_name}"}</code>,{" "}
                         <code>{"{landscape_summary}"}</code>,{" "}
@@ -5283,7 +5828,7 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                               type="button"
                               aria-label="Remove column"
                               onClick={() => setSheetColumns(cur => cur.filter((_, i) => i !== idx))}
-                              style={{background:"#fff",border:"1px solid #d8e2d4",borderRadius:6,height:32,cursor:"pointer",fontWeight:700,color:"#92400e"}}
+                              style={{background:"var(--fbc-fff)",border:"1px solid var(--fbc-d8e2d4)",borderRadius:6,height:32,cursor:"pointer",fontWeight:700,color:"var(--fbc-92400e)"}}
                             >×</button>
                           </div>
                         ))}
@@ -5291,7 +5836,7 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                       <button
                         type="button"
                         onClick={() => setSheetColumns(cur => [...cur, {header:"", source:""}])}
-                        style={{marginTop:8,padding:"6px 12px",background:"#fff",color:"#1f5f35",border:"1px dashed #a7f3d0",borderRadius:6,fontWeight:600,fontSize:12.5,cursor:"pointer"}}
+                        style={{marginTop:8,padding:"6px 12px",background:"var(--fbc-fff)",color:"var(--fbc-1f5f35)",border:"1px dashed var(--fbc-a7f3d0)",borderRadius:6,fontWeight:600,fontSize:12.5,cursor:"pointer"}}
                       >+ Add column</button>
                     </div>
                   </div>
@@ -5538,7 +6083,7 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                       return (
                         <div className="fb-bh-section" style={{
                             padding: "10px 14px 12px",
-                            borderTop: "1px solid #e6e9ef",
+                            borderTop: "1px solid var(--fbc-e6e9ef)",
                           }}>
                           <label style={{
                               display: "flex", alignItems: "flex-start",
@@ -5552,12 +6097,12 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                             />
                             <span style={{ fontSize: 13, lineHeight: 1.45, flex: 1 }}>
                               <strong>Only call during business hours</strong>
-                              <span style={{ display: "block", color: "#5a6470", marginTop: 2 }}>
+                              <span style={{ display: "block", color: "var(--fbc-5a6470)", marginTop: 2 }}>
                                 {respectBusinessHours
                                   ? (bizHoursConfigured
                                       ? <>Calls between <strong>{_fmt12(bizHourStart)} – {_fmt12(bizHourEnd)} {tzShort}</strong> fire immediately. Outside that window they wait until next morning so customers aren't dialed at night.</>
                                       : <>⚠ <strong>Time zone not set yet.</strong> The gate is off until you pick a time zone and window below — calls will fire whenever the engine reaches them.</>)
-                                  : <>Calls fire immediately, day or night. Use only for testing or genuinely time-critical alerts. {bizHoursConfigured && <span style={{ color: "#94a3b8" }}>(Saved zone: <strong>{tzShort}</strong>.)</span>}</>}
+                                  : <>Calls fire immediately, day or night. Use only for testing or genuinely time-critical alerts. {bizHoursConfigured && <span style={{ color: "var(--fbc-94a3b8)" }}>(Saved zone: <strong>{tzShort}</strong>.)</span>}</>}
                               </span>
                             </span>
                           </label>
@@ -5566,8 +6111,8 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                           {outsideNow && (
                             <div role="alert" style={{
                                 marginTop: 8, padding: "8px 12px",
-                                background: "#fef3c7", border: "1px solid #fde68a",
-                                borderRadius: 8, fontSize: 12.5, color: "#78350f",
+                                background: "var(--fbc-fef3c7)", border: "1px solid var(--fbc-fde68a)",
+                                borderRadius: 8, fontSize: 12.5, color: "var(--fbc-78350f)",
                                 lineHeight: 1.4,
                               }}>
                               ⚠ It's currently outside <strong>{_fmt12(bizHourStart)} – {_fmt12(bizHourEnd)} {tzShort}</strong>. Calls submitted now would defer to the next morning. Either turn this off, widen the window, or test during business hours.
@@ -5584,11 +6129,11 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                               {bizHoursEditing ? (
                                 <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12.5 }}>
                                   <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                                    <span style={{ color: "#5a6470" }}>Window:</span>
+                                    <span style={{ color: "var(--fbc-5a6470)" }}>Window:</span>
                                     <select
                                       value={bizHourStart == null ? "" : bizHourStart}
                                       onChange={(e) => setBizHourStart(e.target.value === "" ? null : parseInt(e.target.value, 10))}
-                                      style={{ padding: "4px 6px", border: "1px solid #cdd7e3", borderRadius: 6 }}
+                                      style={{ padding: "4px 6px", border: "1px solid var(--fbc-cdd7e3)", borderRadius: 6 }}
                                     >
                                       <option value="">Pick a start time…</option>
                                       {Array.from({length: 24}, (_, h) => (
@@ -5599,7 +6144,7 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                                     <select
                                       value={bizHourEnd == null ? "" : bizHourEnd}
                                       onChange={(e) => setBizHourEnd(e.target.value === "" ? null : parseInt(e.target.value, 10))}
-                                      style={{ padding: "4px 6px", border: "1px solid #cdd7e3", borderRadius: 6 }}
+                                      style={{ padding: "4px 6px", border: "1px solid var(--fbc-cdd7e3)", borderRadius: 6 }}
                                     >
                                       <option value="">Pick an end time…</option>
                                       {Array.from({length: 24}, (_, h) => (
@@ -5608,11 +6153,11 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                                     </select>
                                   </div>
                                   <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                                    <span style={{ color: "#5a6470" }}>Time zone:</span>
+                                    <span style={{ color: "var(--fbc-5a6470)" }}>Time zone:</span>
                                     <select
                                       value={bizHourTz}
                                       onChange={(e) => setBizHourTz(e.target.value)}
-                                      style={{ padding: "4px 6px", border: "1px solid #cdd7e3", borderRadius: 6, minWidth: 220 }}
+                                      style={{ padding: "4px 6px", border: "1px solid var(--fbc-cdd7e3)", borderRadius: 6, minWidth: 220 }}
                                     >
                                       <option value="">Pick a time zone…</option>
                                       {(() => {
@@ -5647,14 +6192,14 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                                         title={`Use your browser's detected zone: ${_detectedTz}`}
                                         style={{
                                           background: "none", border: 0, padding: 0,
-                                          color: "#185fa5", cursor: "pointer",
+                                          color: "var(--fbc-185fa5)", cursor: "pointer",
                                           fontSize: 12, textDecoration: "underline",
                                         }}
                                       >Use my zone</button>
                                     )}
                                   </div>
                                   {!bizHoursConfigured && (
-                                    <p style={{ margin: 0, color: "#94a3b8", fontSize: 11.5, lineHeight: 1.4 }}>
+                                    <p style={{ margin: 0, color: "var(--fbc-94a3b8)", fontSize: 11.5, lineHeight: 1.4 }}>
                                       Until all three are filled in, the gate stays off — calls fire whenever the engine reaches them.
                                     </p>
                                   )}
@@ -5668,9 +6213,9 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                                       title={bizHoursConfigured ? "" : "Pick a start, end, and time zone first."}
                                       style={{
                                         padding: "4px 10px", borderRadius: 6,
-                                        border: "1px solid #185fa5",
-                                        background: bizHoursConfigured ? "#185fa5" : "#cbd5e1",
-                                        color: "#fff",
+                                        border: "1px solid var(--fbc-185fa5)",
+                                        background: bizHoursConfigured ? "var(--fbc-185fa5)" : "var(--fbc-cbd5e1)",
+                                        color: "var(--fbc-fff)",
                                         cursor: bizHoursConfigured ? "pointer" : "not-allowed",
                                         fontSize: 12,
                                       }}
@@ -5680,8 +6225,8 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                                       onClick={() => setBizHoursEditing(false)}
                                       style={{
                                         padding: "4px 10px", borderRadius: 6,
-                                        border: "1px solid #cdd7e3", background: "#fff",
-                                        color: "#374151", cursor: "pointer", fontSize: 12,
+                                        border: "1px solid var(--fbc-cdd7e3)", background: "var(--fbc-fff)",
+                                        color: "var(--fbc-374151)", cursor: "pointer", fontSize: 12,
                                       }}
                                     >Cancel</button>
                                   </div>
@@ -5692,7 +6237,7 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                                   onClick={() => setBizHoursEditing(true)}
                                   style={{
                                     background: "none", border: 0, padding: 0,
-                                    color: "#185fa5", cursor: "pointer",
+                                    color: "var(--fbc-185fa5)", cursor: "pointer",
                                     textDecoration: "underline", fontSize: 12.5,
                                   }}
                                 >{bizHoursConfigured ? "Change time zone & window" : "Set time zone & window"}</button>
@@ -5701,6 +6246,126 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                         </div>
                       );
                     })()}
+                  </div>
+                )}
+
+                {/* Two-way conversation Phase 1+2: Wait for them to reply.
+                    Shown for both Reach out (first send → wait for first
+                    reply → continue) AND Reply (loop: AI responds → wait
+                    for next reply → AI responds again → loops until
+                    owner takes over or max_replies). On a Reply block,
+                    the toggle reads as "Keep replying until I take over"
+                    semantically — same engine plumbing, different
+                    framing because the Reply block is the loop body. */}
+                {(supportsWaitForReply || isReply) && (
+                  <div className="fb-wait-section" style={{
+                      padding: "12px 14px 14px", marginTop: 8,
+                      borderTop: "1px solid var(--fbc-e6e9ef)",
+                      background: "var(--fbc-fafbfc)",
+                    }}>
+                    <label style={{
+                        display: "flex", alignItems: "flex-start",
+                        gap: 10, cursor: "pointer",
+                      }}>
+                      <input
+                        type="checkbox"
+                        checked={waitForReply}
+                        onChange={(e) => setWaitForReply(e.target.checked)}
+                        style={{ marginTop: 3 }}
+                      />
+                      <span style={{ fontSize: 13, lineHeight: 1.45, flex: 1 }}>
+                        <strong>{isReply
+                          ? "Keep replying with AI until I take over"
+                          : "Wait for them to reply, then continue"}</strong>
+                        <span style={{ display: "block", color: "var(--fbc-5a6470)", marginTop: 2 }}>
+                          {isReply
+                            ? (waitForReply
+                                ? <>The AI handles back-and-forth. After each customer reply, this block runs again with their newest message as <code style={{ fontSize: 11.5, background: "var(--fbc-eef2ff)", padding: "1px 5px", borderRadius: 3 }}>{"{customer_reply}"}</code>. Loops until you take over or max replies hit.</>
+                                : <>Reply once, then end. The flow doesn't wait for another customer reply.</>)
+                            : (waitForReply
+                                ? <>The flow pauses after this step. When they reply, the next block runs with their reply available as <code style={{ fontSize: 11.5, background: "var(--fbc-eef2ff)", padding: "1px 5px", borderRadius: 3 }}>{"{customer_reply}"}</code>.</>
+                                : <>Just send and move on — the flow doesn't wait.</>)}
+                        </span>
+                      </span>
+                    </label>
+                    {waitForReply && (
+                      <div style={{ marginTop: 10, paddingLeft: 24,
+                                      display: "flex", flexDirection: "column",
+                                      gap: 8 }}>
+                        <div style={{ display: "flex", alignItems: "center",
+                                        gap: 8, fontSize: 12.5, color: "var(--fbc-475569)",
+                                        flexWrap: "wrap" }}>
+                          <span>If they don't reply within</span>
+                          <select
+                            value={waitTimeoutSeconds}
+                            onChange={(e) => setWaitTimeoutSeconds(Number(e.target.value))}
+                            style={{ padding: "4px 8px", borderRadius: 6,
+                                      border: "1px solid var(--fbc-cbd5e1)", fontSize: 12.5,
+                                      background: "var(--fbc-fff)" }}
+                          >
+                            <option value={60 * 60}>1 hour</option>
+                            <option value={4 * 60 * 60}>4 hours</option>
+                            <option value={24 * 60 * 60}>1 day</option>
+                            <option value={3 * 24 * 60 * 60}>3 days</option>
+                            <option value={7 * 24 * 60 * 60}>1 week</option>
+                            <option value={14 * 24 * 60 * 60}>2 weeks</option>
+                          </select>
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center",
+                                        gap: 8, fontSize: 12.5, color: "var(--fbc-475569)",
+                                        flexWrap: "wrap" }}>
+                          <span>then</span>
+                          <select
+                            value={waitTimeoutAction}
+                            onChange={(e) => setWaitTimeoutAction(e.target.value)}
+                            style={{ padding: "4px 8px", borderRadius: 6,
+                                      border: "1px solid var(--fbc-cbd5e1)", fontSize: 12.5,
+                                      background: "var(--fbc-fff)" }}
+                          >
+                            <option value="end">end the flow</option>
+                            <option value="continue">continue to the next step anyway</option>
+                            {/* "branch" splits the canvas node into two
+                                output paths (reply / no reply). Offered
+                                on the reply-branch-capable activities
+                                (Reach out, Introductory email, Follow-up
+                                message). The Reply block is a loop body,
+                                not a fork, so it never gets this option. */}
+                            {supportsWaitForReply && (
+                              <option value="branch">split into two paths (reply / no reply)</option>
+                            )}
+                          </select>
+                        </div>
+                        {supportsWaitForReply && waitTimeoutAction === "branch" && (
+                          <p className="fb-helper" style={{ marginTop: 8 }}>
+                            The block now has two outputs on the canvas — a
+                            green <strong>"If they reply"</strong> path and an
+                            amber <strong>"If no reply"</strong> path. Drag a
+                            step onto each to set up what happens.
+                          </p>
+                        )}
+                        {isReply && (
+                          <div style={{ display: "flex", alignItems: "center",
+                                          gap: 8, fontSize: 12.5, color: "var(--fbc-475569)",
+                                          flexWrap: "wrap" }}>
+                            <span>Stop after</span>
+                            <select
+                              value={maxReplies}
+                              onChange={(e) => setMaxReplies(Number(e.target.value))}
+                              style={{ padding: "4px 8px", borderRadius: 6,
+                                        border: "1px solid var(--fbc-cbd5e1)", fontSize: 12.5,
+                                        background: "var(--fbc-fff)" }}
+                            >
+                              <option value={3}>3 AI replies</option>
+                              <option value={5}>5 AI replies</option>
+                              <option value={10}>10 AI replies</option>
+                              <option value={20}>20 AI replies</option>
+                              <option value={50}>50 AI replies</option>
+                            </select>
+                            <span>(then I take over)</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -5761,7 +6426,7 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
             )}
           </div>
 
-          {!isInput && !isCall && !isAppendSheet && !isReply && (
+          {!isInput && !isCall && !isAppendSheet && !isReply && !isFollowUp && (
           <div className={`fb-drawer-preview ${previewCollapsed ? "is-collapsed" : ""}`}>
             <button
               type="button"
@@ -6642,7 +7307,7 @@ function TestSummaryCard({ summary, error, onClose, onRunAgain, onSeeFailedStep 
       </div>
 
       {error && (
-        <div className="fb-test-summary-stat" style={{ color: "#991b1b" }}>
+        <div className="fb-test-summary-stat" style={{ color: "var(--fbc-991b1b)" }}>
           {error}
         </div>
       )}
@@ -6653,7 +7318,7 @@ function TestSummaryCard({ summary, error, onClose, onRunAgain, onSeeFailedStep 
             <strong>✓ {completedCount}</strong> step{completedCount === 1 ? "" : "s"} ran
           </div>
           {failedCount > 0 && (
-            <div className="fb-test-summary-stat" style={{ color: "#991b1b" }}>
+            <div className="fb-test-summary-stat" style={{ color: "var(--fbc-991b1b)" }}>
               <strong>✕ {failedCount}</strong> failed
             </div>
           )}
@@ -6673,7 +7338,7 @@ function TestSummaryCard({ summary, error, onClose, onRunAgain, onSeeFailedStep 
               <div className="fb-test-summary-stat" style={{ marginBottom: 6 }}>
                 <strong>Test messages:</strong>
                 {realSendFrom && (
-                  <span style={{ marginLeft: 6, color: "#0a8a3a", fontWeight: 600 }}>
+                  <span style={{ marginLeft: 6, color: "var(--fbc-0a8a3a)", fontWeight: 600 }}>
                     real emails sent from {realSendFrom}
                   </span>
                 )}
@@ -6682,14 +7347,14 @@ function TestSummaryCard({ summary, error, onClose, onRunAgain, onSeeFailedStep 
                 <div key={i} className="fb-test-sent-row">
                   {r.channel === "email" ? "📧" : r.channel === "sms" ? "💬" : "📞"}{" "}
                   {r.to}{" "}
-                  <span style={{ color: "#94a3b8" }}>· {r.count} message{r.count === 1 ? "" : "s"}</span>
+                  <span style={{ color: "var(--fbc-94a3b8)" }}>· {r.count} message{r.count === 1 ? "" : "s"}</span>
                   {r.anyReal && !r.anyError && (
-                    <span style={{ marginLeft: 8, color: "#0a8a3a", fontWeight: 700, fontSize: 11 }}>
+                    <span style={{ marginLeft: 8, color: "var(--fbc-0a8a3a)", fontWeight: 700, fontSize: 11 }}>
                       ✓ SENT
                     </span>
                   )}
                   {r.anyError && (
-                    <span style={{ marginLeft: 8, color: "#991b1b", fontWeight: 700, fontSize: 11 }}>
+                    <span style={{ marginLeft: 8, color: "var(--fbc-991b1b)", fontWeight: 700, fontSize: 11 }}>
                       ✕ {r.anyError.slice(0, 60)}
                     </span>
                   )}
@@ -6698,7 +7363,7 @@ function TestSummaryCard({ summary, error, onClose, onRunAgain, onSeeFailedStep 
             </div>
           )}
 
-          <div className="fb-test-summary-stat" style={{ marginTop: 14, fontSize: 12.5, color: "#94a3b8" }}>
+          <div className="fb-test-summary-stat" style={{ marginTop: 14, fontSize: 12.5, color: "var(--fbc-94a3b8)" }}>
             Took {(summary.totalMs / 1000).toFixed(1)}s
             {waitedCount > 0 && " (production would take longer due to wait steps)"}
           </div>
@@ -6780,7 +7445,7 @@ function BotReplyCarousel({
     return (
       <div className="fb-replywidget-section">
         <label className="fb-drawer-l">Which bot replies?</label>
-        <div style={{ color: "#6b7280", fontSize: 12.5, padding: "4px 0" }}>
+        <div style={{ color: "var(--fbc-6b7280)", fontSize: 12.5, padding: "4px 0" }}>
           Loading your bots…
         </div>
       </div>
@@ -6795,17 +7460,17 @@ function BotReplyCarousel({
         }}>
           <span>Which bot replies?</span>
           <a href="/dashboard#agents" target="_top"
-             style={{ color: "#185fa5", fontWeight: 600, fontSize: 11.5 }}>
+             style={{ color: "var(--fbc-185fa5)", fontWeight: 600, fontSize: 11.5 }}>
             + Create a new bot
           </a>
         </label>
         <div style={{
-          padding: 10, border: "1px solid #e5e7eb", borderRadius: 8,
-          background: "#fff", fontSize: 12.5, color: "#374151",
+          padding: 10, border: "1px solid var(--fbc-e5e7eb)", borderRadius: 8,
+          background: "var(--fbc-fff)", fontSize: 12.5, color: "var(--fbc-374151)",
         }}>
           You haven't created any bots yet.{" "}
           <a href="/dashboard#agents" target="_top"
-             style={{ color: "#185fa5", fontWeight: 600 }}>+ Create a bot</a>
+             style={{ color: "var(--fbc-185fa5)", fontWeight: 600 }}>+ Create a bot</a>
         </div>
       </div>
     );
@@ -6816,9 +7481,9 @@ function BotReplyCarousel({
     ? (_REPLY_FIT[_aiAgentCategorize(pickedBot)] || _REPLY_FIT.custom)
     : null;
   const pickedFitDot = pickedFit
-    ? (pickedFit.fit === "good" ? "#16a34a"
-       : pickedFit.fit === "warn" ? "#f59e0b" : "#94a3b8")
-    : "#94a3b8";
+    ? (pickedFit.fit === "good" ? "var(--fbc-16a34a)"
+       : pickedFit.fit === "warn" ? "var(--fbc-f59e0b)" : "var(--fbc-94a3b8)")
+    : "var(--fbc-94a3b8)";
 
   const handleSelectChange = (e) => {
     const next = bots.find(b => b.id === e.target.value);
@@ -6833,7 +7498,7 @@ function BotReplyCarousel({
       }}>
         <span>Which bot replies?</span>
         <a href="/dashboard#agents" target="_top"
-           style={{ color: "#185fa5", fontWeight: 600, fontSize: 11.5 }}>
+           style={{ color: "var(--fbc-185fa5)", fontWeight: 600, fontSize: 11.5 }}>
           + Create a new bot
         </a>
       </label>
@@ -6849,11 +7514,11 @@ function BotReplyCarousel({
           style={{
             width: "100%",
             padding: "10px 36px 10px 12px",
-            border: "1px solid #cbd5e1",
+            border: "1px solid var(--fbc-cbd5e1)",
             borderRadius: 8,
-            background: "#fff",
+            background: "var(--fbc-fff)",
             font: "600 13px inherit",
-            color: "#0f172a",
+            color: "var(--fbc-0f172a)",
             cursor: "pointer",
             appearance: "none",
             WebkitAppearance: "none",
@@ -6871,7 +7536,7 @@ function BotReplyCarousel({
           position: "absolute", right: 12, top: "50%",
           transform: "translateY(-50%)",
           pointerEvents: "none",
-          color: "#64748b", fontSize: 11,
+          color: "var(--fbc-64748b)", fontSize: 11,
         }}>▾</span>
       </div>
 
@@ -6879,10 +7544,10 @@ function BotReplyCarousel({
         <div style={{
           marginTop: 8,
           padding: "8px 10px",
-          background: "#f8fafc",
-          border: "1px solid #e5e7eb",
+          background: "var(--fbc-f8fafc)",
+          border: "1px solid var(--fbc-e5e7eb)",
           borderRadius: 8,
-          fontSize: 12.5, color: "#475569",
+          fontSize: 12.5, color: "var(--fbc-475569)",
           display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap",
         }}>
           <span aria-hidden="true" style={{
@@ -6890,12 +7555,12 @@ function BotReplyCarousel({
             flexShrink: 0,
           }} />
           <span>
-            <strong style={{ color: "#0f172a" }}>{pickedBot.name}</strong>
+            <strong style={{ color: "var(--fbc-0f172a)" }}>{pickedBot.name}</strong>
             {" — "}{pickedFit.label.toLowerCase()}.
           </span>
           <a href={`/dashboard#agents/${encodeURIComponent(pickedBot.id)}`}
              target="_top"
-             style={{ color: "#185fa5", fontWeight: 600, marginLeft: "auto" }}>
+             style={{ color: "var(--fbc-185fa5)", fontWeight: 600, marginLeft: "auto" }}>
             View setup →
           </a>
         </div>
@@ -6952,13 +7617,20 @@ function ReplyWidgetEditor({
 
   const pickedBot = bots.find(b => b.id === replyAgentId) || null;
 
-  // If global AI is Off, the "AI replies" choice is unrunnable. Auto-
-  // flip to "Send this" so the user lands on a valid default. Runs both
-  // on initial policy load AND on any live change (top-right → Off).
-  React.useEffect(() => {
-    if (aiOff && fallback === "ai") setFallback("custom");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [aiOff]);
+  // Previously we auto-flipped fallback from "ai" to "custom" when
+  // global AI was off, on the theory that the AI choice would be
+  // "unrunnable". That logic was actively harmful: it silently
+  // overwrote a user's explicit "Customer bot replies" choice and
+  // saved the flipped value back to node.data. Result — users who
+  // picked the bot were surprised to see their saved message go out
+  // instead.
+  //
+  // The engine already handles this case correctly: when policy.mode
+  // is "i_respond", execute_ai_reply returns reason="mode_disallows"
+  // and skips the step without sending anything. So removing the
+  // auto-flip is safe — the saved choice is respected, and a globally
+  // disabled AI just no-ops the reply step at runtime. The "(off)"
+  // suffix and disabled tab state still warn the user visually.
 
   // Inline AI tester — same /me/ai/test-reply endpoint the AI Settings
   // page uses, just rendered in the drawer so users can sanity-check
@@ -7053,9 +7725,9 @@ function ReplyWidgetEditor({
         onClick={() => { if (!isDis) setFallback(id); }}
         style={{
           padding: "7px 14px", border: "0",
-          borderBottom: "2px solid " + (isOn ? "#0f172a" : "transparent"),
+          borderBottom: "2px solid " + (isOn ? "var(--fbc-0f172a)" : "transparent"),
           background: "transparent",
-          color: isDis ? "#cbd5e1" : (isOn ? "#0f172a" : "#6b7280"),
+          color: isDis ? "var(--fbc-cbd5e1)" : (isOn ? "var(--fbc-0f172a)" : "var(--fbc-6b7280)"),
           font: "600 13px inherit", cursor: isDis ? "not-allowed" : "pointer",
           transition: "color .12s, border-color .12s",
         }}
@@ -7073,9 +7745,9 @@ function ReplyWidgetEditor({
         onClick={() => setReplyChannel && setReplyChannel(val)}
         style={{
           padding: "6px 12px", fontSize: 12.5, fontWeight: 600,
-          border: "1px solid " + (active ? "#0f172a" : "#e5e7eb"),
-          borderRadius: 6, background: active ? "#0f172a" : "#fff",
-          color: active ? "#fff" : "#334155", cursor: "pointer",
+          border: "1px solid " + (active ? "var(--fbc-0f172a)" : "var(--fbc-e5e7eb)"),
+          borderRadius: 6, background: active ? "var(--fbc-0f172a)" : "var(--fbc-fff)",
+          color: active ? "var(--fbc-fff)" : "var(--fbc-334155)", cursor: "pointer",
           font: "inherit",
         }}
       >{label}</button>
@@ -7093,7 +7765,7 @@ function ReplyWidgetEditor({
         <div style={{
           display: "inline-flex", alignItems: "center", gap: 6,
           padding: "5px 12px", borderRadius: 999,
-          background: "#eef2ff", color: "#3730a3",
+          background: "var(--fbc-eef2ff)", color: "var(--fbc-3730a3)",
           fontSize: 12, fontWeight: 600,
         }}>✉️ Email</div>
       </div>
@@ -7102,7 +7774,7 @@ function ReplyWidgetEditor({
       <div className="fb-replywidget-section">
         <label className="fb-drawer-l">If I don't reply</label>
         <div style={{
-          display: "flex", gap: 4, borderBottom: "1px solid #e5e7eb",
+          display: "flex", gap: 4, borderBottom: "1px solid var(--fbc-e5e7eb)",
           marginBottom: 4,
         }}>
           {tabBtn("ai",
@@ -7171,9 +7843,9 @@ function ReplyWidgetEditor({
                                   background: (() => {
                                     const codes = ["form","phone","email","multiple"]
                                       .map(ch => _availabilityForChannel(t.token, ch));
-                                    if (codes.every(c => c === "✓")) return "#16a34a";
-                                    if (codes.some(c => c === "-")) return "#f59e0b";
-                                    return "#94a3b8";
+                                    if (codes.every(c => c === "✓")) return "var(--fbc-16a34a)";
+                                    if (codes.some(c => c === "-")) return "var(--fbc-f59e0b)";
+                                    return "var(--fbc-94a3b8)";
                                   })(),
                                 }} />{t.label}</button>
                 ))}
@@ -7188,7 +7860,7 @@ function ReplyWidgetEditor({
                 {body
                   ? renderWithMergeTags(body)
                   : (
-                    <span style={{ color: "#94a3b8", fontStyle: "italic" }}>
+                    <span style={{ color: "var(--fbc-94a3b8)", fontStyle: "italic" }}>
                       Write a message and it'll appear here.
                     </span>
                   )}
@@ -7369,13 +8041,13 @@ const STYLES = `
     width: 100%;
     height: calc(100vh - 130px);
     min-height: 480px;
-    background: #fafaf9;
+    background: var(--fbc-fafaf9);
     border: 1px solid rgba(15,23,42,.08);
     border-radius: 14px;
     overflow: hidden;
     display: flex; flex-direction: column;
-    --fb-green: #16a34a;
-    --fb-green-soft: #bbf7d0;
+    --fb-green: var(--fbc-16a34a);
+    --fb-green-soft: var(--fbc-bbf7d0);
     --fb-border: rgba(15,23,42,.08);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
                  Helvetica, Arial, sans-serif;
@@ -7391,20 +8063,20 @@ const STYLES = `
   .fb-view-tabs {
     display: flex; gap: 4px;
     padding: 8px 12px;
-    background: #fff;
+    background: var(--fbc-fff);
     border-bottom: 1px solid var(--fb-border);
     flex-shrink: 0;
   }
   .fb-view-tab {
     background: transparent; border: 0;
     padding: 8px 14px; border-radius: 8px;
-    font: 600 13px inherit; color: #6b7280; cursor: pointer;
+    font: 600 13px inherit; color: var(--fbc-6b7280); cursor: pointer;
     display: inline-flex; align-items: center; gap: 6px;
   }
-  .fb-view-tab:hover { background: #f3f4f6; color: #0a0a0a; }
+  .fb-view-tab:hover { background: var(--fbc-f3f4f6); color: var(--fbc-0a0a0a); }
   .fb-view-tab.is-active {
-    background: #f0fdf4; color: var(--fb-green);
-    box-shadow: 0 0 0 1px #bbf7d0 inset;
+    background: var(--fbc-f0fdf4); color: var(--fb-green);
+    box-shadow: 0 0 0 1px var(--fbc-bbf7d0) inset;
   }
   /* ── Canvas node (activity + branch share .fb-card) ────────────────
      Redesigned to be larger, color-coded, and readable when zoomed
@@ -7414,7 +8086,7 @@ const STYLES = `
   .fb-card {
     position: relative;
     width: 360px;
-    background: #fff;
+    background: var(--fbc-fff);
     border-radius: 16px;
     padding: 16px 18px 16px;
     border: 1px solid var(--fb-border);
@@ -7434,27 +8106,27 @@ const STYLES = `
   /* Top stripe */
   .fb-card-stripe {
     position: absolute; top: 0; left: 0; right: 0; height: 6px;
-    background: var(--kind-color, #10b981);
+    background: var(--kind-color, var(--fbc-10b981));
     border-radius: 16px 16px 0 0;
   }
   /* Per-kind palettes — picked to be vibrant + professional. */
   .fb-kind-trigger {
-    --kind-color: #10b981;       /* emerald 500 */
-    --kind-soft:  #d1fae5;        /* emerald 100 */
+    --kind-color: var(--fbc-10b981);       /* emerald 500 */
+    --kind-soft:  var(--fbc-d1fae5);        /* emerald 100 */
     --kind-ring:  rgba(16,185,129,.18);
-    --kind-deep:  #065f46;        /* emerald 800 */
+    --kind-deep:  var(--fbc-065f46);        /* emerald 800 */
   }
   .fb-kind-action {
-    --kind-color: #3b82f6;       /* blue 500 */
-    --kind-soft:  #dbeafe;        /* blue 100 */
+    --kind-color: var(--fbc-3b82f6);       /* blue 500 */
+    --kind-soft:  var(--fbc-dbeafe);        /* blue 100 */
     --kind-ring:  rgba(59,130,246,.18);
-    --kind-deep:  #1e40af;
+    --kind-deep:  var(--fbc-1e40af);
   }
   .fb-kind-logic, .fb-branch {
-    --kind-color: #f59e0b;       /* amber 500 */
-    --kind-soft:  #fef3c7;        /* amber 100 */
+    --kind-color: var(--fbc-f59e0b);       /* amber 500 */
+    --kind-soft:  var(--fbc-fef3c7);        /* amber 100 */
     --kind-ring:  rgba(245,158,11,.20);
-    --kind-deep:  #92400e;
+    --kind-deep:  var(--fbc-92400e);
   }
   .fb-card.is-on {
     border-color: var(--kind-color);
@@ -7479,7 +8151,7 @@ const STYLES = `
   }
   .fb-card-text { flex: 1; min-width: 0; }
   .fb-card-title {
-    font-size: 19px; font-weight: 700; color: #0a0a0a;
+    font-size: 19px; font-weight: 700; color: var(--fbc-0a0a0a);
     line-height: 1.2;
     letter-spacing: -0.01em;
     margin-bottom: 3px;
@@ -7500,8 +8172,8 @@ const STYLES = `
     outline: none;
   }
   .fb-card-title-edit:focus {
-    border-color: var(--kind-deep, #185fa5);
-    background: #fff;
+    border-color: var(--kind-deep, var(--fbc-185fa5));
+    background: var(--fbc-fff);
     box-shadow: 0 0 0 2px rgba(24,95,165,.12);
   }
   .fb-card-sub {
@@ -7517,18 +8189,18 @@ const STYLES = `
   .fb-card-pill {
     flex-shrink: 0;
     padding: 4px 10px; border-radius: 999px;
-    background: #f3f4f6; color: #6b7280;
+    background: var(--fbc-f3f4f6); color: var(--fbc-6b7280);
     font-size: 10.5px; font-weight: 800; letter-spacing: .06em;
     text-transform: uppercase;
   }
   .fb-card-pill.is-on {
-    background: var(--kind-color); color: #fff;
+    background: var(--kind-color); color: var(--fbc-fff);
     box-shadow: 0 0 0 3px var(--kind-ring);
   }
   /* Input card always shows a green "START" badge so the user reads
      it instantly as the entry point, regardless of on/off state. */
   .fb-card-pill-input {
-    background: #10b981; color: #fff;
+    background: var(--fbc-10b981); color: var(--fbc-fff);
     box-shadow: 0 0 0 3px rgba(16,185,129,.20);
   }
 
@@ -7541,7 +8213,7 @@ const STYLES = `
     right: -14px;                 /* center on the card's right edge */
     top: 50%;
     transform: translateY(-50%);
-    background: #fff;
+    background: var(--fbc-fff);
     border: 2px solid var(--fb-green);
     box-shadow: 0 2px 6px rgba(15,23,42,.10),
                 0 0 0 0 rgba(22,163,74,0);
@@ -7558,7 +8230,7 @@ const STYLES = `
     box-shadow: 0 4px 12px rgba(15,23,42,.18),
                 0 0 0 4px rgba(22,163,74,.20);
   }
-  .fb-knob.react-flow__handle:hover .fb-knob-arrow { color: #fff; }
+  .fb-knob.react-flow__handle:hover .fb-knob-arrow { color: var(--fbc-fff); }
   .fb-knob.react-flow__handle:active { cursor: grabbing; }
   .fb-knob-arrow {
     color: var(--fb-green);
@@ -7572,7 +8244,7 @@ const STYLES = `
     left: 50%; top: -34px;
     transform: translateX(-50%) translateY(4px);
     padding: 5px 10px; border-radius: 8px;
-    background: #0f172a; color: #fff;
+    background: var(--fbc-0f172a); color: var(--fbc-fff);
     font-size: 11.5px; font-weight: 600; white-space: nowrap;
     opacity: 0; pointer-events: none;
     transition: opacity .15s ease, transform .15s ease;
@@ -7588,7 +8260,7 @@ const STYLES = `
      Stays grabbable but reads as a passive port, not an action. */
   .fb-handle-target.react-flow__handle {
     width: 12px; height: 12px;
-    background: #fff;
+    background: var(--fbc-fff);
     border: 2px solid var(--fb-green);
     box-shadow: 0 0 0 2px rgba(22,163,74,.18);
   }
@@ -7608,8 +8280,8 @@ const STYLES = `
     z-index: 2;
     display: inline-flex; align-items: center; justify-content: center;
     width: 32px; height: 32px;
-    background: var(--fb-green); color: #fff;
-    border: 2px solid #fff; border-radius: 50%;
+    background: var(--fb-green); color: var(--fbc-fff);
+    border: 2px solid var(--fbc-fff); border-radius: 50%;
     font: 800 18px -apple-system, BlinkMacSystemFont, "Segoe UI",
           Roboto, sans-serif;
     line-height: 1;
@@ -7620,7 +8292,7 @@ const STYLES = `
     transition: transform .12s, box-shadow .12s, background .12s;
   }
   .fb-add-btn:hover {
-    background: #15803d;
+    background: var(--fbc-15803d);
     transform: scale(1.1);
     box-shadow: 0 6px 16px rgba(15,23,42,.22),
                 0 0 0 2px rgba(22,163,74,.35);
@@ -7629,7 +8301,7 @@ const STYLES = `
     position: absolute;
     right: 0; bottom: calc(100% + 8px);
     padding: 5px 10px; border-radius: 8px;
-    background: #0f172a; color: #fff;
+    background: var(--fbc-0f172a); color: var(--fbc-fff);
     font: 600 11.5px -apple-system, BlinkMacSystemFont, "Segoe UI",
           Roboto, sans-serif;
     letter-spacing: 0;
@@ -7749,12 +8421,12 @@ const STYLES = `
     transform: translate(50%, -50%) scale(1.05);
   }
   .fb-next-btn-no {
-    background: #6b7280;
+    background: var(--fbc-6b7280);
     box-shadow: 0 2px 6px rgba(15,23,42,.18),
                 0 0 0 1px rgba(107,114,128,.25);
   }
   .fb-next-btn-no:hover {
-    background: #4b5563;
+    background: var(--fbc-4b5563);
     box-shadow: 0 4px 12px rgba(15,23,42,.22),
                 0 0 0 2px rgba(107,114,128,.35);
   }
@@ -7764,7 +8436,7 @@ const STYLES = `
   .react-flow__handle {
     background: var(--fb-green);
     width: 14px; height: 14px;
-    border: 2px solid #fff;
+    border: 2px solid var(--fbc-fff);
     box-shadow: 0 0 0 2px rgba(22,163,74,.25);
     transition: transform .12s, box-shadow .12s;
   }
@@ -7773,7 +8445,7 @@ const STYLES = `
     box-shadow: 0 0 0 4px rgba(22,163,74,.35);
   }
   .react-flow__handle.fb-handle-no {
-    background: #9ca3af;
+    background: var(--fbc-9ca3af);
     box-shadow: 0 0 0 2px rgba(156,163,175,.25);
   }
   .react-flow__handle.fb-handle-no:hover {
@@ -7808,23 +8480,23 @@ const STYLES = `
     font-size: 14px; font-weight: 600;
   }
   .fb-branch-path.is-yes {
-    background: rgba(16,185,129,.08); color: #065f46;
-    border-top: 1px solid #d1fae5;
-    border-bottom: 1px solid #d1fae5;
+    background: rgba(16,185,129,.08); color: var(--fbc-065f46);
+    border-top: 1px solid var(--fbc-d1fae5);
+    border-bottom: 1px solid var(--fbc-d1fae5);
   }
   .fb-branch-path.is-no {
-    background: #fafafa; color: #4b5563;
-    border-top: 1px solid #e5e7eb;
+    background: var(--fbc-fafafa); color: var(--fbc-4b5563);
+    border-top: 1px solid var(--fbc-e5e7eb);
     border-bottom-left-radius: 16px;
     border-bottom-right-radius: 16px;
   }
   .fb-branch-path-ico {
     width: 22px; height: 22px; border-radius: 50%;
-    background: #10b981; color: #fff;
+    background: var(--fbc-10b981); color: var(--fbc-fff);
     display: inline-flex; align-items: center; justify-content: center;
     font-size: 12px; font-weight: 700; flex-shrink: 0;
   }
-  .fb-branch-path.is-no .fb-branch-path-ico { background: #9ca3af; }
+  .fb-branch-path.is-no .fb-branch-path-ico { background: var(--fbc-9ca3af); }
   .fb-branch-path-l { flex: 1; min-width: 0; }
 
   /* Drawer: branch condition picker + path preview ─────────────────── */
@@ -7838,28 +8510,28 @@ const STYLES = `
     font-size: 13.5px; font-weight: 600;
   }
   .fb-branch-pathname.is-yes {
-    background: rgba(22,163,74,.08); color: #166534;
-    border: 1px solid #bbf7d0;
+    background: rgba(22,163,74,.08); color: var(--fbc-166534);
+    border: 1px solid var(--fbc-bbf7d0);
   }
   .fb-branch-pathname.is-no {
-    background: #f9fafb; color: #4b5563;
-    border: 1px solid #e5e7eb;
+    background: var(--fbc-f9fafb); color: var(--fbc-4b5563);
+    border: 1px solid var(--fbc-e5e7eb);
   }
   .fb-branch-pathname-ico {
     width: 22px; height: 22px; border-radius: 50%;
-    background: #16a34a; color: #fff;
+    background: var(--fbc-16a34a); color: var(--fbc-fff);
     display: inline-flex; align-items: center; justify-content: center;
     font-size: 12px; font-weight: 700;
   }
-  .fb-branch-pathname.is-no .fb-branch-pathname-ico { background: #9ca3af; }
+  .fb-branch-pathname.is-no .fb-branch-pathname-ico { background: var(--fbc-9ca3af); }
 
   .fb-branch-preview {
     width: 100%; max-width: 280px;
-    background: #fff; border: 1px solid var(--fb-border);
+    background: var(--fbc-fff); border: 1px solid var(--fb-border);
     border-radius: 14px; padding: 14px 16px;
   }
   .fb-branch-preview-q {
-    font-size: 13.5px; font-weight: 700; color: #0a0a0a;
+    font-size: 13.5px; font-weight: 700; color: var(--fbc-0a0a0a);
     margin-bottom: 12px; text-align: center;
   }
   .fb-branch-preview-paths {
@@ -7871,10 +8543,10 @@ const STYLES = `
     font-size: 12.5px; font-weight: 600;
   }
   .fb-branch-preview-row.is-yes {
-    background: rgba(22,163,74,.06); color: #166534;
+    background: rgba(22,163,74,.06); color: var(--fbc-166534);
   }
   .fb-branch-preview-row.is-no {
-    background: #fafafa; color: #6b7280;
+    background: var(--fbc-fafafa); color: var(--fbc-6b7280);
   }
   .fb-branch-preview-arrow {
     margin-left: auto; opacity: .5;
@@ -7883,7 +8555,7 @@ const STYLES = `
   /* ── Library panel ───────────────────────────────────────────────── */
   .fb-library {
     width: 304px; flex-shrink: 0;
-    background: #fff;
+    background: var(--fbc-fff);
     border-left: 1px solid var(--fb-border);
     display: flex; flex-direction: column;
     transition: width .18s ease;
@@ -7896,40 +8568,40 @@ const STYLES = `
   }
   .fb-library.is-collapsed .fb-library-h > div { display: none; }
   .fb-library-h-title {
-    font-size: 14px; font-weight: 700; color: #0a0a0a;
+    font-size: 14px; font-weight: 700; color: var(--fbc-0a0a0a);
     margin-bottom: 2px;
   }
   .fb-library-h-sub {
-    font-size: 12px; color: #6b7280; line-height: 1.4;
+    font-size: 12px; color: var(--fbc-6b7280); line-height: 1.4;
   }
   .fb-library-toggle {
     width: 24px; height: 24px;
-    border: 1px solid var(--fb-border); background: #fff;
+    border: 1px solid var(--fb-border); background: var(--fbc-fff);
     border-radius: 50%;
-    color: #6b7280; cursor: pointer;
+    color: var(--fbc-6b7280); cursor: pointer;
     display: inline-flex; align-items: center; justify-content: center;
     flex-shrink: 0; padding: 0; line-height: 1;
     font-size: 14px;
   }
-  .fb-library-toggle:hover { background: #f9fafb; color: #0a0a0a; }
+  .fb-library-toggle:hover { background: var(--fbc-f9fafb); color: var(--fbc-0a0a0a); }
   .fb-library-body {
     flex: 1; overflow-y: auto;
     padding: 10px 12px 16px;
   }
   .fb-library-section { margin-bottom: 16px; }
   .fb-library-section-h {
-    font-size: 11px; font-weight: 700; color: #4b5563;
+    font-size: 11px; font-weight: 700; color: var(--fbc-4b5563);
     letter-spacing: .04em; text-transform: uppercase;
     margin: 6px 4px 2px;
   }
   .fb-library-section-sub {
-    font-size: 11.5px; color: #6b7280; line-height: 1.4;
+    font-size: 11.5px; color: var(--fbc-6b7280); line-height: 1.4;
     margin: 0 4px 8px;
   }
   .fb-lib-item {
     display: flex; align-items: flex-start; gap: 10px;
     padding: 9px 10px;
-    background: #fff; border: 1px solid var(--fb-border);
+    background: var(--fbc-fff); border: 1px solid var(--fb-border);
     border-radius: 10px;
     margin-bottom: 6px;
     cursor: grab;
@@ -7949,12 +8621,12 @@ const STYLES = `
   .fb-lib-ico { font-size: 18px; line-height: 1.2; flex-shrink: 0; }
   .fb-lib-text { flex: 1; min-width: 0; }
   .fb-lib-title {
-    font-size: 13.5px; font-weight: 600; color: #0a0a0a;
+    font-size: 13.5px; font-weight: 600; color: var(--fbc-0a0a0a);
     margin-bottom: 1px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .fb-lib-sub {
-    font-size: 11.5px; color: #6b7280; line-height: 1.4;
+    font-size: 11.5px; color: var(--fbc-6b7280); line-height: 1.4;
   }
   .fb-lib-badge {
     flex-shrink: 0; font-size: 10px; font-weight: 700;
@@ -7962,10 +8634,10 @@ const STYLES = `
     letter-spacing: .04em; align-self: center;
   }
   .fb-lib-badge-soon {
-    background: #fef3c7; color: #92400e;
+    background: var(--fbc-fef3c7); color: var(--fbc-92400e);
   }
   .fb-lib-badge-added {
-    background: #dcfce7; color: #166534;
+    background: var(--fbc-dcfce7); color: var(--fbc-166534);
   }
 
   /* ── Canvas chrome corners ──────────────────────────────────────────
@@ -7990,19 +8662,19 @@ const STYLES = `
     backdrop-filter: blur(6px);
     border: 1px solid var(--fb-border);
     border-radius: 999px;
-    font-size: 12px; font-weight: 600; color: #6b7280;
+    font-size: 12px; font-weight: 600; color: var(--fbc-6b7280);
     z-index: 5;
     pointer-events: none;
     transition: color .15s, background .15s, border-color .15s;
   }
-  .fb-save-saving { color: #4b5563; }
-  .fb-save-saved  { color: #166534; border-color: #bbf7d0;
+  .fb-save-saving { color: var(--fbc-4b5563); }
+  .fb-save-saved  { color: var(--fbc-166534); border-color: var(--fbc-bbf7d0);
                     background: rgba(240,253,244,.92); }
-  .fb-save-error  { color: #991b1b; border-color: #fecaca;
+  .fb-save-error  { color: var(--fbc-991b1b); border-color: var(--fbc-fecaca);
                     background: rgba(254,242,242,.92); }
   .fb-save-dot {
     width: 8px; height: 8px; border-radius: 50%;
-    background: #4b5563;
+    background: var(--fbc-4b5563);
     animation: fbSavePulse 1s ease-in-out infinite;
   }
   @keyframes fbSavePulse {
@@ -8048,7 +8720,7 @@ const STYLES = `
     backdrop-filter: blur(6px);
     border: 1px solid var(--fb-border);
     border-radius: 999px;
-    font-size: 12px; font-weight: 600; color: #4b5563;
+    font-size: 12px; font-weight: 600; color: var(--fbc-4b5563);
   }
 
   /* ✕ button at the midpoint of every edge. Hidden by default;
@@ -8062,9 +8734,9 @@ const STYLES = `
   .fb-edge-x {
     width: 22px; height: 22px;
     display: inline-flex; align-items: center; justify-content: center;
-    background: #fff;
-    color: #b91c1c;
-    border: 1.5px solid #ef4444;
+    background: var(--fbc-fff);
+    color: var(--fbc-b91c1c);
+    border: 1.5px solid var(--fbc-ef4444);
     border-radius: 50%;
     font-size: 14px; font-weight: 700; line-height: 1;
     font-family: inherit;
@@ -8086,8 +8758,8 @@ const STYLES = `
     stroke-width: 3;
   }
   .fb-edge-x:hover {
-    background: #ef4444;
-    color: #fff;
+    background: var(--fbc-ef4444);
+    color: var(--fbc-fff);
     transform: scale(1.1);
     box-shadow: 0 4px 10px rgba(239,68,68,.30);
   }
@@ -8103,8 +8775,8 @@ const STYLES = `
     padding: 9px 18px;
     font-size: 14px; font-weight: 700;
     border-radius: 999px;
-    background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
-    color: #fff; border: 1.5px solid #0f172a;
+    background: linear-gradient(180deg, var(--fbc-0f172a) 0%, var(--fbc-1e293b) 100%);
+    color: var(--fbc-fff); border: 1.5px solid var(--fbc-0f172a);
     cursor: pointer; font-family: inherit;
     display: inline-flex; align-items: center; gap: 8px;
     box-shadow: 0 4px 14px rgba(15,23,42,0.20),
@@ -8116,8 +8788,8 @@ const STYLES = `
                 0 2px 4px rgba(15,23,42,0.10);
   }
   .fb-test-btn.is-running {
-    background: linear-gradient(180deg, #b91c1c 0%, #991b1b 100%);
-    border-color: #991b1b;
+    background: linear-gradient(180deg, var(--fbc-b91c1c) 0%, var(--fbc-991b1b) 100%);
+    border-color: var(--fbc-991b1b);
   }
   .fb-test-btn-ico { font-size: 12px; line-height: 1; }
   /* Top-left — back pill (one of two: My Flows or Done? Back to your
@@ -8140,9 +8812,9 @@ const STYLES = `
     box-shadow: 0 6px 16px rgba(20,40,80,.16);
   }
   .fb-backpill.is-from-flows {
-    background: #fff; border: 1px solid #cdd7e3; color: #185fa5;
+    background: var(--fbc-fff); border: 1px solid var(--fbc-cdd7e3); color: var(--fbc-185fa5);
   }
-  .fb-backpill.is-from-flows:hover { background: #f5f9fd; }
+  .fb-backpill.is-from-flows:hover { background: var(--fbc-f5f9fd); }
 
   /* Bottom-left — help / tour replay icon. Round 36 px button. */
   .fb-tour-replay {
@@ -8151,9 +8823,9 @@ const STYLES = `
     z-index: 8;
     width: 36px; height: 36px;
     border-radius: 999px;
-    background: #fff;
-    border: 1.5px solid #cdd7e3;
-    color: #185fa5;
+    background: var(--fbc-fff);
+    border: 1.5px solid var(--fbc-cdd7e3);
+    color: var(--fbc-185fa5);
     cursor: pointer;
     font-weight: 700; font-size: 18px; line-height: 1;
     display: flex; align-items: center; justify-content: center;
@@ -8192,11 +8864,11 @@ const STYLES = `
     100% { box-shadow: 0 0 0 0 rgba(34,197,94,0),     0 8px 24px rgba(34,197,94,.18); }
   }
   .fb-card-run-completed {
-    box-shadow: inset 4px 0 0 #16a34a, 0 1px 3px rgba(22,163,74,.18);
+    box-shadow: inset 4px 0 0 var(--fbc-16a34a), 0 1px 3px rgba(22,163,74,.18);
     background: linear-gradient(180deg, rgba(220,252,231,.30) 0%, rgba(255,255,255,1) 100%) !important;
   }
   .fb-card-run-failed {
-    box-shadow: inset 4px 0 0 #dc2626, 0 1px 3px rgba(220,38,38,.18);
+    box-shadow: inset 4px 0 0 var(--fbc-dc2626), 0 1px 3px rgba(220,38,38,.18);
     background: linear-gradient(180deg, rgba(254,226,226,.30) 0%, rgba(255,255,255,1) 100%) !important;
   }
   .fb-card-run-skipped {
@@ -8210,7 +8882,7 @@ const STYLES = `
   }
   .fb-card-run-stopped {
     opacity: 0.6;
-    box-shadow: inset 4px 0 0 #94a3b8;
+    box-shadow: inset 4px 0 0 var(--fbc-94a3b8);
   }
 
   /* Status badge dot in the top-right of the card */
@@ -8219,7 +8891,7 @@ const STYLES = `
     width: 26px; height: 26px;
     display: inline-flex; align-items: center; justify-content: center;
     border-radius: 50%;
-    color: #fff; font-size: 13px; font-weight: 700;
+    color: var(--fbc-fff); font-size: 13px; font-weight: 700;
     box-shadow: 0 4px 10px rgba(15,23,42,.18);
     z-index: 5;
     animation: fbBadgePop .26s cubic-bezier(.2,.8,.2,1) both;
@@ -8228,13 +8900,13 @@ const STYLES = `
     from { transform: scale(.5); opacity: 0; }
     to   { transform: scale(1);  opacity: 1; }
   }
-  .fb-card-run-badge-running   { background: #16a34a; }
+  .fb-card-run-badge-running   { background: var(--fbc-16a34a); }
   .fb-card-run-badge-running   { animation: fbBadgePop .26s ease-out, fbBadgeSpin 1.2s linear infinite; }
   @keyframes fbBadgeSpin { to { transform: rotate(360deg); } }
-  .fb-card-run-badge-completed { background: #16a34a; }
-  .fb-card-run-badge-failed    { background: #dc2626; }
-  .fb-card-run-badge-skipped   { background: #94a3b8; font-size: 14px; }
-  .fb-card-run-badge-stopped   { background: #475569; }
+  .fb-card-run-badge-completed { background: var(--fbc-16a34a); }
+  .fb-card-run-badge-failed    { background: var(--fbc-dc2626); }
+  .fb-card-run-badge-skipped   { background: var(--fbc-94a3b8); font-size: 14px; }
+  .fb-card-run-badge-stopped   { background: var(--fbc-475569); }
 
   /* Reduced motion: skip the pulses and badge spins. */
   @media (prefers-reduced-motion: reduce) {
@@ -8250,7 +8922,7 @@ const STYLES = `
     fill: none;
   }
   .fb-edge-run-active {
-    stroke: #16a34a;
+    stroke: var(--fbc-16a34a);
     stroke-width: 3;
     stroke-linecap: round;
     stroke-dasharray: 6 8;
@@ -8261,18 +8933,18 @@ const STYLES = `
     to { stroke-dashoffset: -28; }
   }
   .fb-edge-run-completed {
-    stroke: #16a34a;
+    stroke: var(--fbc-16a34a);
     stroke-width: 2;
     opacity: 0.55;
   }
   .fb-edge-run-failed {
-    stroke: #dc2626;
+    stroke: var(--fbc-dc2626);
     stroke-width: 2;
     stroke-dasharray: 4 6;
     opacity: 0.7;
   }
   .fb-edge-run-skipped {
-    stroke: #cbd5e1;
+    stroke: var(--fbc-cbd5e1);
     stroke-width: 1.5;
     stroke-dasharray: 3 6;
   }
@@ -8301,7 +8973,7 @@ const STYLES = `
   }
   .fb-test-modal {
     width: 540px; max-width: 100%;
-    background: #fff; border-radius: 18px;
+    background: var(--fbc-fff); border-radius: 18px;
     box-shadow: 0 28px 80px rgba(15,23,42,.30);
     padding: 32px 36px 28px;
     max-height: calc(100vh - 48px); overflow-y: auto;
@@ -8309,18 +8981,18 @@ const STYLES = `
   }
   @keyframes fbScaleIn { from { transform: scale(.96); opacity: 0; } to { transform: scale(1); opacity: 1; } }
   .fb-test-modal h2 {
-    font-size: 22px; font-weight: 700; color: #0a0a0a;
+    font-size: 22px; font-weight: 700; color: var(--fbc-0a0a0a);
     margin: 0 0 8px; letter-spacing: -0.01em;
   }
   .fb-test-modal-sub {
-    font-size: 14.5px; color: #64748b; line-height: 1.5;
+    font-size: 14.5px; color: var(--fbc-64748b); line-height: 1.5;
     margin: 0 0 24px;
   }
   .fb-test-modal-safe {
-    background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%);
-    border: 1.5px solid #bbf7d0; border-radius: 12px;
+    background: linear-gradient(180deg, var(--fbc-f0fdf4) 0%, var(--fbc-dcfce7) 100%);
+    border: 1.5px solid var(--fbc-bbf7d0); border-radius: 12px;
     padding: 12px 14px; margin: 0 0 22px;
-    font-size: 13.5px; color: #166534; font-weight: 600;
+    font-size: 13.5px; color: var(--fbc-166534); font-weight: 600;
     display: flex; align-items: center; gap: 8px;
   }
   .fb-test-fields {
@@ -8329,19 +9001,19 @@ const STYLES = `
   @media (max-width: 540px) { .fb-test-fields { grid-template-columns: 1fr; } }
   .fb-test-fields label {
     display: flex; flex-direction: column; gap: 5px;
-    font-size: 12.5px; font-weight: 600; color: #475569;
+    font-size: 12.5px; font-weight: 600; color: var(--fbc-475569);
     letter-spacing: 0.01em;
   }
   .fb-test-fields .fb-test-fields-full { grid-column: 1 / -1; }
   .fb-test-fields input {
     padding: 11px 13px; font-size: 14.5px;
-    border: 1.5px solid #e5e7eb; border-radius: 10px;
-    font-family: inherit; color: #0a0a0a;
-    background: #fff;
+    border: 1.5px solid var(--fbc-e5e7eb); border-radius: 10px;
+    font-family: inherit; color: var(--fbc-0a0a0a);
+    background: var(--fbc-fff);
     transition: border-color .14s ease, box-shadow .14s ease;
   }
   .fb-test-fields input:focus {
-    outline: 0; border-color: #2563eb;
+    outline: 0; border-color: var(--fbc-2563eb);
     box-shadow: 0 0 0 3px rgba(37,99,235,.12);
   }
   .fb-test-sample-row {
@@ -8350,33 +9022,33 @@ const STYLES = `
   }
   .fb-test-sample-btn {
     padding: 7px 14px; font-size: 13px; font-weight: 600;
-    background: #fff; color: #0f172a;
-    border: 1.5px solid #e5e7eb; border-radius: 999px;
+    background: var(--fbc-fff); color: var(--fbc-0f172a);
+    border: 1.5px solid var(--fbc-e5e7eb); border-radius: 999px;
     cursor: pointer; font-family: inherit;
   }
-  .fb-test-sample-btn:hover { background: #f8fafc; border-color: #cbd5e1; }
+  .fb-test-sample-btn:hover { background: var(--fbc-f8fafc); border-color: var(--fbc-cbd5e1); }
   .fb-test-reply-section {
     margin-top: 22px; padding-top: 20px;
-    border-top: 1px solid #e5e7eb;
+    border-top: 1px solid var(--fbc-e5e7eb);
   }
   .fb-test-reply-section h3 {
-    font-size: 14px; font-weight: 700; color: #0a0a0a;
+    font-size: 14px; font-weight: 700; color: var(--fbc-0a0a0a);
     margin: 0 0 10px;
   }
   .fb-test-reply-row {
     display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;
   }
   .fb-test-reply-row > span {
-    font-size: 13px; color: #475569; padding: 6px 0;
+    font-size: 13px; color: var(--fbc-475569); padding: 6px 0;
     margin-right: auto;
   }
   .fb-test-reply-pill {
     padding: 6px 12px; font-size: 12.5px; font-weight: 600;
-    border: 1.5px solid #e5e7eb; border-radius: 999px;
-    background: #fff; color: #475569; cursor: pointer; font-family: inherit;
+    border: 1.5px solid var(--fbc-e5e7eb); border-radius: 999px;
+    background: var(--fbc-fff); color: var(--fbc-475569); cursor: pointer; font-family: inherit;
   }
   .fb-test-reply-pill.is-active {
-    background: #0f172a; color: #fff; border-color: #0f172a;
+    background: var(--fbc-0f172a); color: var(--fbc-fff); border-color: var(--fbc-0f172a);
   }
   .fb-test-actions {
     display: flex; gap: 10px; justify-content: flex-end;
@@ -8384,23 +9056,23 @@ const STYLES = `
   }
   .fb-test-btn-cancel {
     padding: 10px 18px; font-size: 14px; font-weight: 600;
-    background: #fff; color: #0a0a0a;
-    border: 1.5px solid #e5e7eb; border-radius: 10px;
+    background: var(--fbc-fff); color: var(--fbc-0a0a0a);
+    border: 1.5px solid var(--fbc-e5e7eb); border-radius: 10px;
     cursor: pointer; font-family: inherit;
   }
   .fb-test-btn-run {
     padding: 10px 22px; font-size: 14.5px; font-weight: 700;
-    background: linear-gradient(180deg, #16a34a 0%, #15803d 100%);
-    color: #fff; border: 1.5px solid #15803d; border-radius: 10px;
+    background: linear-gradient(180deg, var(--fbc-16a34a) 0%, var(--fbc-15803d) 100%);
+    color: var(--fbc-fff); border: 1.5px solid var(--fbc-15803d); border-radius: 10px;
     cursor: pointer; font-family: inherit;
     box-shadow: 0 4px 12px rgba(22,163,74,.24);
   }
   .fb-test-btn-run:hover { transform: translateY(-1px); }
   .fb-test-error {
     margin-top: 16px; padding: 12px 14px;
-    background: linear-gradient(180deg, #fff7ed 0%, #ffedd5 100%);
-    border: 1.5px solid #fdba74; border-radius: 10px;
-    font-size: 13.5px; color: #9a3412; line-height: 1.5;
+    background: linear-gradient(180deg, var(--fbc-fff7ed) 0%, var(--fbc-ffedd5) 100%);
+    border: 1.5px solid var(--fbc-fdba74); border-radius: 10px;
+    font-size: 13.5px; color: var(--fbc-9a3412); line-height: 1.5;
   }
 
   /* ── Test summary card (shows after a run completes) ─────────────── */
@@ -8408,7 +9080,7 @@ const STYLES = `
     position: absolute; top: 80px; right: 16px;
     z-index: 49;
     width: 380px; max-width: calc(100vw - 32px);
-    background: #fff; border: 1px solid #e5e7eb;
+    background: var(--fbc-fff); border: 1px solid var(--fbc-e5e7eb);
     border-radius: 16px;
     box-shadow: 0 20px 50px rgba(15,23,42,.18);
     padding: 22px 24px 20px;
@@ -8420,43 +9092,43 @@ const STYLES = `
     margin-bottom: 14px;
   }
   .fb-test-summary-h h3 {
-    font-size: 17px; font-weight: 700; color: #0a0a0a;
+    font-size: 17px; font-weight: 700; color: var(--fbc-0a0a0a);
     margin: 0; letter-spacing: -0.01em;
   }
-  .fb-test-summary-h.is-failed h3 { color: #991b1b; }
+  .fb-test-summary-h.is-failed h3 { color: var(--fbc-991b1b); }
   .fb-test-summary-x {
-    background: #f1f5f9; border: 0; cursor: pointer;
+    background: var(--fbc-f1f5f9); border: 0; cursor: pointer;
     width: 26px; height: 26px; border-radius: 50%;
     display: inline-flex; align-items: center; justify-content: center;
-    color: #475569; font-size: 14px;
+    color: var(--fbc-475569); font-size: 14px;
   }
-  .fb-test-summary-x:hover { background: #e2e8f0; color: #0f172a; }
+  .fb-test-summary-x:hover { background: var(--fbc-e2e8f0); color: var(--fbc-0f172a); }
   .fb-test-summary-stat {
-    font-size: 13.5px; color: #475569; line-height: 1.6;
+    font-size: 13.5px; color: var(--fbc-475569); line-height: 1.6;
     margin: 4px 0;
   }
-  .fb-test-summary-stat strong { color: #0a0a0a; }
+  .fb-test-summary-stat strong { color: var(--fbc-0a0a0a); }
   .fb-test-sent-list {
     margin-top: 12px; padding-top: 12px;
-    border-top: 1px solid #f1f5f9;
+    border-top: 1px solid var(--fbc-f1f5f9);
   }
   .fb-test-sent-row {
-    font-size: 13px; color: #475569; padding: 4px 0;
+    font-size: 13px; color: var(--fbc-475569); padding: 4px 0;
     line-height: 1.5;
   }
-  .fb-test-sent-row strong { color: #0a0a0a; }
+  .fb-test-sent-row strong { color: var(--fbc-0a0a0a); }
   .fb-test-summary-foot {
     margin-top: 16px; padding-top: 14px;
-    border-top: 1px solid #f1f5f9;
+    border-top: 1px solid var(--fbc-f1f5f9);
     display: flex; gap: 8px; justify-content: flex-end;
   }
   .fb-test-summary-foot button {
     padding: 8px 14px; font-size: 13px; font-weight: 600;
-    border-radius: 8px; border: 1.5px solid #e5e7eb;
-    background: #fff; color: #0a0a0a; cursor: pointer; font-family: inherit;
+    border-radius: 8px; border: 1.5px solid var(--fbc-e5e7eb);
+    background: var(--fbc-fff); color: var(--fbc-0a0a0a); cursor: pointer; font-family: inherit;
   }
   .fb-test-summary-foot .is-primary {
-    background: #0f172a; color: #fff; border-color: #0f172a;
+    background: var(--fbc-0f172a); color: var(--fbc-fff); border-color: var(--fbc-0f172a);
   }
   .fb-test-summary-foot button:hover { transform: translateY(-1px); }
 
@@ -8468,7 +9140,7 @@ const STYLES = `
     left: 50%; bottom: 24px;
     transform: translateX(-50%);
     padding: 10px 18px;
-    background: #0f172a; color: #fff;
+    background: var(--fbc-0f172a); color: var(--fbc-fff);
     font-size: 13px; font-weight: 600;
     border-radius: 999px;
     box-shadow: 0 10px 30px rgba(15,23,42,.30),
@@ -8501,7 +9173,7 @@ const STYLES = `
   .fb-drawer {
     position: absolute; right: 0; top: 0; bottom: 0;
     width: min(1000px, 100%);
-    background: #fff;
+    background: var(--fbc-fff);
     border-left: 1px solid var(--fb-border);
     box-shadow: -16px 0 40px rgba(15,23,42,.18);
     z-index: 11;
@@ -8518,19 +9190,19 @@ const STYLES = `
     border-bottom: 1px solid var(--fb-border);
   }
   .fb-drawer-h-eyebrow {
-    font-size: 11px; font-weight: 700; color: #6b7280;
+    font-size: 11px; font-weight: 700; color: var(--fbc-6b7280);
     letter-spacing: .04em; margin-bottom: 4px;
   }
   .fb-drawer-h-title {
     display: flex; align-items: center; gap: 8px;
-    font-size: 17px; font-weight: 700; color: #0a0a0a;
+    font-size: 17px; font-weight: 700; color: var(--fbc-0a0a0a);
   }
   .fb-drawer-h-ico { font-size: 20px; line-height: 1; }
   .fb-drawer-x {
     background: none; border: 0; font-size: 26px;
-    color: #9ca3af; cursor: pointer; padding: 0 6px; line-height: 1;
+    color: var(--fbc-9ca3af); cursor: pointer; padding: 0 6px; line-height: 1;
   }
-  .fb-drawer-x:hover { color: #0a0a0a; }
+  .fb-drawer-x:hover { color: var(--fbc-0a0a0a); }
   .fb-drawer-body {
     flex: 1; overflow-y: auto;
     display: grid;
@@ -8554,16 +9226,16 @@ const STYLES = `
   .fb-aiagent-loading,
   .fb-aiagent-empty {
     padding: 24px 16px; text-align: center;
-    color: #64748b; font-size: 13.5px;
+    color: var(--fbc-64748b); font-size: 13.5px;
   }
   .fb-aiagent-empty p { margin: 0 0 12px; }
   .fb-aiagent-create {
     display: inline-block; padding: 8px 14px;
-    background: var(--kind-deep, #185fa5); color: #fff;
+    background: var(--kind-deep, var(--fbc-185fa5)); color: var(--fbc-fff);
     border-radius: 8px; text-decoration: none; font-weight: 600;
   }
   .fb-aiagent-l {
-    font-size: 12px; font-weight: 700; color: #4b5563;
+    font-size: 12px; font-weight: 700; color: var(--fbc-4b5563);
     letter-spacing: .03em; text-transform: uppercase;
     margin: 0 0 4px;
   }
@@ -8573,33 +9245,33 @@ const STYLES = `
   .fb-aiagent-row {
     display: flex; align-items: flex-start; gap: 10px;
     width: 100%; text-align: left;
-    background: #fff; border: 1.5px solid #e2e8f0; border-radius: 10px;
+    background: var(--fbc-fff); border: 1.5px solid var(--fbc-e2e8f0); border-radius: 10px;
     padding: 12px 14px;
     cursor: pointer; font: inherit; color: inherit;
     transition: border-color .12s ease, background .12s ease;
   }
   .fb-aiagent-row:hover {
-    background: #f8fafc; border-color: #94a3b8;
+    background: var(--fbc-f8fafc); border-color: var(--fbc-94a3b8);
   }
   .fb-aiagent-row.is-selected {
-    background: #eef2ff; border-color: var(--kind-deep, #185fa5);
+    background: var(--fbc-eef2ff); border-color: var(--kind-deep, var(--fbc-185fa5));
     box-shadow: 0 0 0 2px rgba(24,95,165,.15);
   }
   .fb-aiagent-radio {
     flex-shrink: 0; font-size: 16px; line-height: 1.25;
-    color: #94a3b8;
+    color: var(--fbc-94a3b8);
   }
   .fb-aiagent-row.is-selected .fb-aiagent-radio {
-    color: var(--kind-deep, #185fa5);
+    color: var(--kind-deep, var(--fbc-185fa5));
   }
   .fb-aiagent-text {
     display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1;
   }
   .fb-aiagent-name {
-    font-size: 14px; font-weight: 600; color: #0f172a;
+    font-size: 14px; font-weight: 600; color: var(--fbc-0f172a);
   }
   .fb-aiagent-job {
-    font-size: 12.5px; color: #475569; line-height: 1.45;
+    font-size: 12.5px; color: var(--fbc-475569); line-height: 1.45;
   }
   .fb-aiagent-fit {
     display: inline-flex; align-items: center;
@@ -8607,31 +9279,31 @@ const STYLES = `
     margin-top: 4px; padding: 2px 8px;
     border-radius: 99px; align-self: flex-start;
   }
-  .fb-aiagent-fit.is-good { color: #047857; background: #d1fae5; }
-  .fb-aiagent-fit.is-warn { color: #92400e; background: #fef3c7; }
+  .fb-aiagent-fit.is-good { color: var(--fbc-047857); background: var(--fbc-d1fae5); }
+  .fb-aiagent-fit.is-warn { color: var(--fbc-92400e); background: var(--fbc-fef3c7); }
   .fb-aiagent-create-row {
-    font-size: 12.5px; color: #64748b;
+    font-size: 12.5px; color: var(--fbc-64748b);
     text-align: center; padding-top: 4px;
   }
   .fb-aiagent-create-row a {
-    color: var(--kind-deep, #185fa5); text-decoration: none; font-weight: 600;
+    color: var(--kind-deep, var(--fbc-185fa5)); text-decoration: none; font-weight: 600;
   }
   .fb-aiagent-create-row a:hover { text-decoration: underline; }
 
   .fb-aiagent-preview {
     margin-top: 4px;
-    background: #f8fafc;
-    border: 1px solid #cbd5e1; border-radius: 12px;
+    background: var(--fbc-f8fafc);
+    border: 1px solid var(--fbc-cbd5e1); border-radius: 12px;
     padding: 14px;
   }
   .fb-aiagent-preview-h {
-    font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 6px;
+    font-size: 14px; font-weight: 700; color: var(--fbc-0f172a); margin-bottom: 6px;
   }
   .fb-aiagent-preview-p {
-    margin: 0 0 10px; font-size: 13px; line-height: 1.5; color: #1f2937;
+    margin: 0 0 10px; font-size: 13px; line-height: 1.5; color: var(--fbc-1f2937);
   }
   .fb-aiagent-preview-sub {
-    font-size: 12.5px; color: #475569; font-weight: 600;
+    font-size: 12.5px; color: var(--fbc-475569); font-weight: 600;
     margin-bottom: 6px;
   }
   .fb-aiagent-outcomes {
@@ -8640,36 +9312,36 @@ const STYLES = `
   }
   .fb-aiagent-outcomes li {
     display: flex; align-items: center; gap: 8px;
-    background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;
+    background: var(--fbc-fff); border: 1px solid var(--fbc-e2e8f0); border-radius: 8px;
     padding: 6px 10px;
-    font-size: 13px; color: #0f172a;
+    font-size: 13px; color: var(--fbc-0f172a);
   }
   .fb-aiagent-outcome-emoji { flex-shrink: 0; font-size: 14px; }
   .fb-aiagent-preview-meta {
     font-size: 12.5px;
   }
   .fb-aiagent-edit {
-    color: var(--kind-deep, #185fa5); text-decoration: none; font-weight: 600;
+    color: var(--kind-deep, var(--fbc-185fa5)); text-decoration: none; font-weight: 600;
   }
   .fb-aiagent-edit:hover { text-decoration: underline; }
   .fb-aiagent-preview-note {
     margin-top: 10px; padding: 8px 10px;
-    background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px;
-    font-size: 12.5px; color: #1e3a8a;
+    background: var(--fbc-eff6ff); border: 1px solid var(--fbc-bfdbfe); border-radius: 8px;
+    font-size: 12.5px; color: var(--fbc-1e3a8a);
   }
   .fb-aiagent-preview-warn {
     margin-top: 10px; padding: 8px 10px;
-    background: #fef3c7; border: 1px solid #fde68a; border-radius: 8px;
-    font-size: 12.5px; color: #92400e;
+    background: var(--fbc-fef3c7); border: 1px solid var(--fbc-fde68a); border-radius: 8px;
+    font-size: 12.5px; color: var(--fbc-92400e);
   }
   /* Test-with-sample-lead panel */
   .fb-aiagent-test {
     margin-top: 16px; padding-top: 14px;
-    border-top: 1px dashed #cbd5e1;
+    border-top: 1px dashed var(--fbc-cbd5e1);
     display: flex; flex-direction: column; gap: 10px;
   }
   .fb-aiagent-test-h {
-    font-size: 12px; font-weight: 700; color: #4b5563;
+    font-size: 12px; font-weight: 700; color: var(--fbc-4b5563);
     letter-spacing: .03em; text-transform: uppercase;
   }
   .fb-aiagent-test-grid {
@@ -8680,44 +9352,44 @@ const STYLES = `
   .fb-aiagent-test-grid textarea { grid-column: 1 / -1; }
   .fb-aiagent-test-btn {
     align-self: flex-start;
-    background: #185fa5; color: #fff; border: 0; border-radius: 8px;
+    background: var(--fbc-185fa5); color: var(--fbc-fff); border: 0; border-radius: 8px;
     padding: 8px 14px; font: inherit; font-size: 13px; font-weight: 600;
     cursor: pointer;
   }
   .fb-aiagent-test-btn:disabled { opacity: .6; cursor: not-allowed; }
   .fb-aiagent-test-err {
-    background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca;
+    background: var(--fbc-fef2f2); color: var(--fbc-b91c1c); border: 1px solid var(--fbc-fecaca);
     border-radius: 8px; padding: 8px 10px; font-size: 12.5px;
   }
   .fb-aiagent-test-out {
-    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;
+    background: var(--fbc-f8fafc); border: 1px solid var(--fbc-e2e8f0); border-radius: 8px;
     padding: 10px 12px;
     display: flex; flex-direction: column; gap: 6px;
   }
   .fb-aiagent-test-sub {
     font-size: 10.5px; font-weight: 700; letter-spacing: .08em;
-    color: #475569; text-transform: uppercase;
+    color: var(--fbc-475569); text-transform: uppercase;
   }
   .fb-aiagent-test-pre {
-    background: #0f172a; color: #e2e8f0;
+    background: var(--fbc-0f172a); color: var(--fbc-e2e8f0);
     padding: 8px 10px; border-radius: 6px;
     font-family: ui-monospace,Menlo,Consolas,monospace;
     font-size: 11.5px; line-height: 1.45;
     margin: 0; max-height: 180px; overflow: auto; white-space: pre-wrap;
   }
   .fb-aiagent-test-routed {
-    background: #ecfdf5; color: #065f46;
-    border: 1px solid #a7f3d0; border-radius: 6px;
+    background: var(--fbc-ecfdf5); color: var(--fbc-065f46);
+    border: 1px solid var(--fbc-a7f3d0); border-radius: 6px;
     padding: 6px 10px; font-size: 13px; font-weight: 600;
   }
 
   /* Qualifier-mode branch rows on the canvas card */
   .fb-aiagent-paths { padding-top: 8px; }
-  .fb-aiagent-paths .fb-branch-path { background: #fafbff; }
+  .fb-aiagent-paths .fb-branch-path { background: var(--fbc-fafbff); }
   .fb-aiagent-paths .is-aiagent .fb-branch-path-ico { font-size: 16px; }
   .fb-drawer-l {
     display: block;
-    font-size: 12px; font-weight: 700; color: #4b5563;
+    font-size: 12px; font-weight: 700; color: var(--fbc-4b5563);
     letter-spacing: .03em; text-transform: uppercase;
     margin: 12px 0 6px;
   }
@@ -8727,7 +9399,7 @@ const STYLES = `
     padding: 10px 12px;
     border: 1px solid var(--fb-border); border-radius: 8px;
     font: 14px/1.45 inherit;
-    background: #fff;
+    background: var(--fbc-fff);
   }
   .fb-input:focus, .fb-textarea:focus {
     outline: none; border-color: var(--fb-green);
@@ -8738,105 +9410,105 @@ const STYLES = `
   }
   .fb-modes {
     display: inline-flex; gap: 0; padding: 2px;
-    background: #f3f4f6; border-radius: 999px;
+    background: var(--fbc-f3f4f6); border-radius: 999px;
     margin-bottom: 8px;
   }
   .fb-mode {
     background: transparent; border: 0;
     padding: 6px 14px; border-radius: 999px;
-    font: 500 13px inherit; color: #6b7280; cursor: pointer;
+    font: 500 13px inherit; color: var(--fbc-6b7280); cursor: pointer;
   }
   .fb-mode.is-active {
-    background: #fff; color: var(--fb-green); font-weight: 700;
+    background: var(--fbc-fff); color: var(--fb-green); font-weight: 700;
     box-shadow: 0 1px 3px rgba(15,23,42,.10);
   }
   .fb-chips-row {
     margin-top: 10px;
     display: flex; flex-direction: column; gap: 6px;
   }
-  .fb-chips-l { font-size: 12px; color: #6b7280; }
+  .fb-chips-l { font-size: 12px; color: var(--fbc-6b7280); }
   .fb-chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .fb-chip {
-    background: #f0fdf4; border: 1px solid #bbf7d0;
-    color: #166534; font: 500 12.5px inherit;
+    background: var(--fbc-f0fdf4); border: 1px solid var(--fbc-bbf7d0);
+    color: var(--fbc-166534); font: 500 12.5px inherit;
     padding: 5px 10px; border-radius: 999px;
     cursor: pointer;
   }
-  .fb-chip:hover { background: #dcfce7; border-color: #86efac; }
+  .fb-chip:hover { background: var(--fbc-dcfce7); border-color: var(--fbc-86efac); }
   .fb-helper {
-    font-size: 12px; color: #6b7280; margin: 8px 0 0;
+    font-size: 12px; color: var(--fbc-6b7280); margin: 8px 0 0;
     line-height: 1.45;
   }
   .fb-helper-inline {
-    color: #9ca3af; font-weight: 400; font-size: 12px;
+    color: var(--fbc-9ca3af); font-weight: 400; font-size: 12px;
   }
   .fb-chip-more {
-    background: #111827 !important; border-color: #111827 !important;
-    color: #fff !important; margin-left: auto;
+    background: var(--fbc-111827) !important; border-color: var(--fbc-111827) !important;
+    color: var(--fbc-fff) !important; margin-left: auto;
   }
   .fb-chip-more:hover {
-    background: #1f2937 !important; border-color: #1f2937 !important;
+    background: var(--fbc-1f2937) !important; border-color: var(--fbc-1f2937) !important;
   }
 
   /* ── Notify recipients ────────────────────────────────────────────── */
   .fb-recip-section {
     margin-top: 14px; margin-bottom: 6px;
     padding: 12px; border-radius: 10px;
-    background: #fafafa; border: 1px solid #e5e7eb;
+    background: var(--fbc-fafafa); border: 1px solid var(--fbc-e5e7eb);
     display: flex; flex-direction: column; gap: 10px;
   }
   .fb-recip-customer {
     display: grid; grid-template-columns: auto 1fr auto; align-items: center;
     gap: 4px 10px; padding: 10px 12px; border-radius: 8px;
-    background: #fff; border: 1px solid #e5e7eb; cursor: pointer;
+    background: var(--fbc-fff); border: 1px solid var(--fbc-e5e7eb); cursor: pointer;
     text-align: left;
   }
-  .fb-recip-customer.is-on { background: #f0fdf4; border-color: #86efac; }
+  .fb-recip-customer.is-on { background: var(--fbc-f0fdf4); border-color: var(--fbc-86efac); }
   .fb-recip-customer-ico {
     grid-row: 1 / span 2; width: 28px; height: 28px;
     display: flex; align-items: center; justify-content: center;
-    border-radius: 50%; background: #e5e7eb; color: #6b7280;
+    border-radius: 50%; background: var(--fbc-e5e7eb); color: var(--fbc-6b7280);
     font-size: 14px; font-weight: 700;
   }
   .fb-recip-customer.is-on .fb-recip-customer-ico {
-    background: #16a34a; color: #fff;
+    background: var(--fbc-16a34a); color: var(--fbc-fff);
   }
   .fb-recip-customer-label {
-    font: 600 13px inherit; color: #111827;
+    font: 600 13px inherit; color: var(--fbc-111827);
   }
   .fb-recip-customer-sub {
-    grid-column: 2; font-size: 12px; color: #6b7280;
+    grid-column: 2; font-size: 12px; color: var(--fbc-6b7280);
   }
   .fb-recip-field { display: flex; flex-direction: column; gap: 6px; }
-  .fb-recip-count { color: #9ca3af; font-weight: 400; }
+  .fb-recip-count { color: var(--fbc-9ca3af); font-weight: 400; }
   .fb-recip-box {
     display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
     padding: 6px 8px; min-height: 40px;
-    background: #fff; border: 1px solid #e5e7eb; border-radius: 8px;
+    background: var(--fbc-fff); border: 1px solid var(--fbc-e5e7eb); border-radius: 8px;
   }
-  .fb-recip-box:focus-within { border-color: #16a34a; box-shadow: 0 0 0 3px rgba(22,163,74,.12); }
+  .fb-recip-box:focus-within { border-color: var(--fbc-16a34a); box-shadow: 0 0 0 3px rgba(22,163,74,.12); }
   .fb-recip-chip {
     display: inline-flex; align-items: center; gap: 4px;
     padding: 4px 4px 4px 10px; border-radius: 6px;
-    background: #f3f4f6; color: #111827; font-size: 13px;
+    background: var(--fbc-f3f4f6); color: var(--fbc-111827); font-size: 13px;
   }
   .fb-recip-chip.is-invalid {
-    background: #fef2f2; color: #b91c1c;
-    text-decoration: underline wavy #fca5a5; text-underline-offset: 2px;
+    background: var(--fbc-fef2f2); color: var(--fbc-b91c1c);
+    text-decoration: underline wavy var(--fbc-fca5a5); text-underline-offset: 2px;
   }
   /* Default-sender chip — the user's connected Gmail. Subtle blue tint
      + tiny "Default" badge so the owner sees instantly that this row
      is them, not someone they typed in. */
   .fb-recip-chip.is-default {
-    background: #eff6ff;
-    border: 1px solid #c7dbf3;
-    color: #0a3d7a;
+    background: var(--fbc-eff6ff);
+    border: 1px solid var(--fbc-c7dbf3);
+    color: var(--fbc-0a3d7a);
     padding-left: 6px;
   }
   .fb-recip-chip-badge {
     display: inline-flex; align-items: center;
     padding: 1px 7px;
-    background: #185fa5; color: #fff;
+    background: var(--fbc-185fa5); color: var(--fbc-fff);
     border-radius: 999px;
     font-size: 10px; font-weight: 700;
     letter-spacing: .04em; text-transform: uppercase;
@@ -8850,60 +9522,60 @@ const STYLES = `
     display: flex; align-items: center; gap: 6px;
     padding: 0;
     background: transparent; border: 0;
-    color: #475569; font-size: 12px; line-height: 1.3;
+    color: var(--fbc-475569); font-size: 12px; line-height: 1.3;
   }
   .fb-recip-default-hint.is-dismissed {
-    color: #92400e;
+    color: var(--fbc-92400e);
   }
   .fb-recip-default-restore {
     margin-left: auto;
-    background: #fff; border: 1px solid #d97706; color: #78350f;
+    background: var(--fbc-fff); border: 1px solid var(--fbc-d97706); color: var(--fbc-78350f);
     padding: 4px 10px; border-radius: 999px;
     font: inherit; font-size: 12px; font-weight: 600;
     cursor: pointer; flex-shrink: 0;
   }
-  .fb-recip-default-restore:hover { background: #fef3c7; }
+  .fb-recip-default-restore:hover { background: var(--fbc-fef3c7); }
   .fb-recip-connect {
     margin-top: 8px;
     display: flex; align-items: center; gap: 10px;
     padding: 10px 12px; border-radius: 10px;
-    background: #fefce8; border: 1px dashed #fde047;
-    color: #713f12; font-size: 13px;
+    background: var(--fbc-fefce8); border: 1px dashed var(--fbc-fde047);
+    color: var(--fbc-713f12); font-size: 13px;
   }
   .fb-recip-connect-btn {
     margin-left: auto;
-    background: #185fa5; color: #fff;
+    background: var(--fbc-185fa5); color: var(--fbc-fff);
     padding: 6px 14px; border-radius: 999px;
     font-size: 12.5px; font-weight: 700;
     text-decoration: none; flex-shrink: 0;
     transition: background .12s;
   }
-  .fb-recip-connect-btn:hover { background: #144b85; }
+  .fb-recip-connect-btn:hover { background: var(--fbc-144b85); }
   .fb-recip-x {
-    border: 0; background: transparent; color: #6b7280; cursor: pointer;
+    border: 0; background: transparent; color: var(--fbc-6b7280); cursor: pointer;
     width: 20px; height: 20px; line-height: 16px; border-radius: 4px;
     font-size: 16px;
   }
-  .fb-recip-x:hover { background: #e5e7eb; color: #111827; }
+  .fb-recip-x:hover { background: var(--fbc-e5e7eb); color: var(--fbc-111827); }
   .fb-recip-input {
     flex: 1; min-width: 160px; border: 0; background: transparent;
-    padding: 6px 4px; font: inherit; outline: none; color: #111827;
+    padding: 6px 4px; font: inherit; outline: none; color: var(--fbc-111827);
   }
   .fb-recip-warn {
     padding: 8px 10px; border-radius: 8px;
-    background: #fffbeb; border: 1px solid #fcd34d;
-    color: #92400e; font-size: 12.5px;
+    background: var(--fbc-fffbeb); border: 1px solid var(--fbc-fcd34d);
+    color: var(--fbc-92400e); font-size: 12.5px;
   }
 
   /* ── Variable picker popover ──────────────────────────────────────── */
   .fb-varpicker {
     position: fixed; z-index: 60; width: 320px; max-height: 360px;
-    background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
+    background: var(--fbc-fff); border: 1px solid var(--fbc-e5e7eb); border-radius: 12px;
     box-shadow: 0 12px 32px rgba(15,23,42,.18);
     display: flex; flex-direction: column; overflow: hidden;
   }
   .fb-varpicker-search {
-    padding: 8px 10px; border-bottom: 1px solid #f1f5f9;
+    padding: 8px 10px; border-bottom: 1px solid var(--fbc-f1f5f9);
   }
   .fb-varpicker-search input {
     width: 100%; border: 0; background: transparent;
@@ -8914,11 +9586,11 @@ const STYLES = `
   }
   .fb-varpicker-empty {
     padding: 18px 14px; text-align: center;
-    color: #6b7280; font-size: 12.5px;
+    color: var(--fbc-6b7280); font-size: 12.5px;
   }
   .fb-varpicker-h {
     padding: 6px 12px 4px;
-    font: 600 10.5px/1 inherit; color: #6b7280;
+    font: 600 10.5px/1 inherit; color: var(--fbc-6b7280);
     text-transform: uppercase; letter-spacing: 0.06em;
   }
   .fb-varpicker-row {
@@ -8928,31 +9600,31 @@ const STYLES = `
     text-align: left; cursor: pointer;
   }
   .fb-varpicker-row:hover, .fb-varpicker-row.is-active {
-    background: #f0fdf4;
+    background: var(--fbc-f0fdf4);
   }
   .fb-varpicker-row-l { min-width: 0; }
   .fb-varpicker-row-label {
-    font: 500 13px inherit; color: #111827;
+    font: 500 13px inherit; color: var(--fbc-111827);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .fb-varpicker-row-token {
-    font: 400 11px monospace; color: #94a3b8;
+    font: 400 11px monospace; color: var(--fbc-94a3b8);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .fb-varpicker-row-r {
     display: flex; align-items: center; gap: 6px;
   }
   .fb-varpicker-row-sample {
-    font: 400 11px monospace; color: #6b7280;
+    font: 400 11px monospace; color: var(--fbc-6b7280);
     max-width: 110px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .fb-varpicker-row-insert {
     padding: 2px 8px; border-radius: 4px;
-    background: #e5e7eb; color: #475569;
+    background: var(--fbc-e5e7eb); color: var(--fbc-475569);
     font: 600 10.5px inherit;
   }
   .fb-varpicker-row.is-active .fb-varpicker-row-insert {
-    background: #16a34a; color: #fff;
+    background: var(--fbc-16a34a); color: var(--fbc-fff);
   }
 
   /* ── Preview source toggle + test data inline editor ──────────────── */
@@ -8960,40 +9632,40 @@ const STYLES = `
     display: flex; align-items: center; gap: 8px;
     margin-bottom: 10px;
   }
-  .fb-prev-source-l { font-size: 12px; color: #6b7280; }
+  .fb-prev-source-l { font-size: 12px; color: var(--fbc-6b7280); }
   .fb-prev-source-pills {
     display: inline-flex; padding: 2px;
-    background: #f3f4f6; border-radius: 999px;
+    background: var(--fbc-f3f4f6); border-radius: 999px;
   }
   .fb-prev-source-pill {
     background: transparent; border: 0; cursor: pointer;
     padding: 4px 10px; border-radius: 999px;
-    font: 500 12px inherit; color: #6b7280;
+    font: 500 12px inherit; color: var(--fbc-6b7280);
   }
   .fb-prev-source-pill.is-active {
-    background: #fff; color: #111827;
+    background: var(--fbc-fff); color: var(--fbc-111827);
     box-shadow: 0 1px 2px rgba(15,23,42,.08);
   }
   .fb-prev-testdata {
     display: grid; gap: 4px; padding: 8px 10px; margin-bottom: 10px;
-    background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px;
+    background: var(--fbc-f9fafb); border: 1px solid var(--fbc-e5e7eb); border-radius: 8px;
   }
   .fb-prev-testdata-row {
     display: grid; grid-template-columns: 110px 1fr;
     align-items: center; gap: 8px;
   }
-  .fb-prev-testdata-k { font: 500 11.5px inherit; color: #6b7280; }
+  .fb-prev-testdata-k { font: 500 11.5px inherit; color: var(--fbc-6b7280); }
   .fb-prev-testdata-v {
-    background: #fff; border: 1px solid #e5e7eb; border-radius: 6px;
+    background: var(--fbc-fff); border: 1px solid var(--fbc-e5e7eb); border-radius: 6px;
     padding: 4px 8px; font: inherit; font-size: 12px; outline: none;
   }
-  .fb-prev-testdata-v:focus { border-color: #16a34a; }
+  .fb-prev-testdata-v:focus { border-color: var(--fbc-16a34a); }
   .fb-prev-recip-sum {
     margin-top: 10px; padding: 8px 12px; border-radius: 8px;
-    background: #f8fafc; border: 1px solid #e2e8f0;
-    font-size: 12.5px; color: #475569; text-align: center;
+    background: var(--fbc-f8fafc); border: 1px solid var(--fbc-e2e8f0);
+    font-size: 12.5px; color: var(--fbc-475569); text-align: center;
   }
-  .fb-prev-recip-sum-warn { color: #b45309; font-weight: 500; }
+  .fb-prev-recip-sum-warn { color: var(--fbc-b45309); font-weight: 500; }
   .fb-phone-both { display: flex; flex-direction: column; }
 
   /* ── Polish 4: tinted 3-tab type selector ──────────────────────── */
@@ -9004,7 +9676,7 @@ const STYLES = `
   }
   .fb-modes-rec {
     grid-column: 3; justify-self: center;
-    background: #fbbf24; color: #78350f;
+    background: var(--fbc-fbbf24); color: var(--fbc-78350f);
     font: 600 9.5px inherit; letter-spacing: 0.06em;
     text-transform: uppercase;
     padding: 1px 8px; border-radius: 999px;
@@ -9017,17 +9689,17 @@ const STYLES = `
   .fb-mode3 {
     display: flex; flex-direction: column; align-items: center; gap: 4px;
     padding: 12px 8px; border-radius: 12px;
-    background: #fff; border: 1.5px solid #e5e7eb;
-    color: #4b5563; font: 500 13.5px inherit; cursor: pointer;
+    background: var(--fbc-fff); border: 1.5px solid var(--fbc-e5e7eb);
+    color: var(--fbc-4b5563); font: 500 13.5px inherit; cursor: pointer;
     transition: background-color .12s, border-color .12s;
   }
-  .fb-mode3:hover { background: #f9fafb; }
+  .fb-mode3:hover { background: var(--fbc-f9fafb); }
   .fb-mode3-ico { font-size: 18px; line-height: 1; }
   .fb-mode3.is-active { font-weight: 700; }
-  .fb-mode3.is-email.is-active { background: #eff6ff; border-color: #3b82f6; color: #1d4ed8; }
-  .fb-mode3.is-sms.is-active   { background: #f5f3ff; border-color: #8b5cf6; color: #6d28d9; }
-  .fb-mode3.is-both.is-active  { background: #fffbeb; border-color: #f59e0b; color: #92400e; }
-  .fb-mode3.is-call.is-active  { background: #ecfdf5; border-color: #10b981; color: #047857; }
+  .fb-mode3.is-email.is-active { background: var(--fbc-eff6ff); border-color: var(--fbc-3b82f6); color: var(--fbc-1d4ed8); }
+  .fb-mode3.is-sms.is-active   { background: var(--fbc-f5f3ff); border-color: var(--fbc-8b5cf6); color: var(--fbc-6d28d9); }
+  .fb-mode3.is-both.is-active  { background: var(--fbc-fffbeb); border-color: var(--fbc-f59e0b); color: var(--fbc-92400e); }
+  .fb-mode3.is-call.is-active  { background: var(--fbc-ecfdf5); border-color: var(--fbc-10b981); color: var(--fbc-047857); }
 
   /* ── Notify Me multi-select channel toggles ────────────────────────
      Three independently-togglable buttons (Call / Text / Email). Each
@@ -9041,8 +9713,8 @@ const STYLES = `
   .fb-modes-warn {
     margin-top: 10px;
     padding: 8px 12px;
-    background: #fef3c7; border: 1px solid #fde68a;
-    color: #92400e; border-radius: 8px;
+    background: var(--fbc-fef3c7); border: 1px solid var(--fbc-fde68a);
+    color: var(--fbc-92400e); border-radius: 8px;
     font: 600 13px inherit;
   }
 
@@ -9055,10 +9727,10 @@ const STYLES = `
      Rounded top, flat bottom, no bottom border so it visually
      continues into the body composer below. */
   .fb-mail-frame {
-    border: 2px solid #60a5fa;
+    border: 2px solid var(--fbc-60a5fa);
     border-bottom: 0;
-    border-left: 6px solid #1d4ed8;
-    background: #bfdbfe;
+    border-left: 6px solid var(--fbc-1d4ed8);
+    background: var(--fbc-bfdbfe);
     border-radius: 12px 12px 0 0;
     padding: 12px 14px;
     margin-top: 14px;
@@ -9073,10 +9745,10 @@ const STYLES = `
      paired with the email subject above. Higher specificity than the
      standalone violet rule below so this wins for the email path. */
   .fb-mail-frame + .fb-composer {
-    border: 2px solid #60a5fa;
+    border: 2px solid var(--fbc-60a5fa);
     border-top: 0;
-    border-left: 6px solid #1d4ed8;
-    background: #bfdbfe;            /* SAME blue as the subject card */
+    border-left: 6px solid var(--fbc-1d4ed8);
+    background: var(--fbc-bfdbfe);            /* SAME blue as the subject card */
     border-radius: 0 0 12px 12px;
     margin-top: 0;                  /* zero gap so they merge */
     padding: 0;
@@ -9085,18 +9757,18 @@ const STYLES = `
   /* 💬 Text-only message body card — only when there's NO email
      subject above (so :not(.fb-mail-frame + .fb-composer) wins). */
   .fb-composer:not(.fb-call-mini):not(.fb-mail-frame + .fb-composer) {
-    border: 2px solid #c4b5fd;
-    border-left: 6px solid #7c3aed;
-    background: #ddd6fe;            /* saturated violet */
+    border: 2px solid var(--fbc-c4b5fd);
+    border-left: 6px solid var(--fbc-7c3aed);
+    background: var(--fbc-ddd6fe);            /* saturated violet */
     border-radius: 12px;
     padding: 0;
     margin-top: 12px;
   }
   /* 📞 Call message section card */
   .fb-composer.fb-call-mini {
-    border: 2px solid #6ee7b7;
-    border-left: 6px solid #059669;
-    background: #a7f3d0;            /* saturated mint card fill */
+    border: 2px solid var(--fbc-6ee7b7);
+    border-left: 6px solid var(--fbc-059669);
+    background: var(--fbc-a7f3d0);            /* saturated mint card fill */
     border-radius: 12px;
     padding: 0;
     margin-top: 12px;
@@ -9117,8 +9789,8 @@ const STYLES = `
     border-color: rgba(29,78,216,.25);
   }
   .fb-subject-input-v2:focus {
-    background: #fff;
-    border-color: #1d4ed8;
+    background: var(--fbc-fff);
+    border-color: var(--fbc-1d4ed8);
     box-shadow: 0 0 0 3px rgba(29,78,216,.18);
   }
   /* Composer rail (variable chips) keeps a translucent white so chips
@@ -9135,24 +9807,24 @@ const STYLES = `
     border: 2px solid; border-left-width: 6px;
   }
   .fb-recip-card.is-sms {
-    background: #faf5ff;
-    border-color: #c4b5fd;
-    border-left-color: #7c3aed;
+    background: var(--fbc-faf5ff);
+    border-color: var(--fbc-c4b5fd);
+    border-left-color: var(--fbc-7c3aed);
   }
   .fb-recip-card.is-call {
-    background: #ecfdf5;
-    border-color: #6ee7b7;
-    border-left-color: #059669;
+    background: var(--fbc-ecfdf5);
+    border-color: var(--fbc-6ee7b7);
+    border-left-color: var(--fbc-059669);
   }
   .fb-recip-card.is-email {
-    background: #eff6ff;
-    border-color: #93c5fd;
-    border-left-color: #2563eb;
+    background: var(--fbc-eff6ff);
+    border-color: var(--fbc-93c5fd);
+    border-left-color: var(--fbc-2563eb);
   }
   /* Inside each card, the chip input keeps a white inner fill so chips
      and the typing area stay legible against the card tint. */
   .fb-recip-card .fb-recip-box {
-    background: #fff;
+    background: var(--fbc-fff);
   }
 
   /* Smooth show animation for any field section that fades into view
@@ -9172,19 +9844,19 @@ const STYLES = `
   /* Disabled save button — semantic feedback that an action is blocked
      without screaming about it. */
   .fb-drawer-done[disabled] {
-    background: #cbd5e1 !important;
-    color: #64748b !important;
+    background: var(--fbc-cbd5e1) !important;
+    color: var(--fbc-64748b) !important;
     cursor: not-allowed !important;
     box-shadow: none !important;
   }
   .fb-modes-multi-h {
-    font: 600 13px inherit; color: #0a0a0a;
+    font: 600 13px inherit; color: var(--fbc-0a0a0a);
     margin-bottom: 8px;
     display: flex; align-items: center; gap: 8px;
   }
   .fb-modes-multi-hint {
-    font: 500 11.5px inherit; color: #6b7280;
-    background: #f3f4f6; padding: 2px 8px; border-radius: 999px;
+    font: 500 11.5px inherit; color: var(--fbc-6b7280);
+    background: var(--fbc-f3f4f6); padding: 2px 8px; border-radius: 999px;
   }
   .fb-modes-multi-row {
     display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -9196,30 +9868,30 @@ const STYLES = `
   .fb-mode-toggle {
     display: flex; align-items: center; gap: 8px;
     padding: 12px 14px;
-    background: #fff; border: 1.5px solid #e5e7eb;
+    background: var(--fbc-fff); border: 1.5px solid var(--fbc-e5e7eb);
     border-radius: 12px; cursor: pointer;
-    font: 600 14px inherit; color: #0a0a0a;
+    font: 600 14px inherit; color: var(--fbc-0a0a0a);
     text-align: left;
     transition: border-color .12s, background .12s, transform .12s;
   }
   .fb-mode-toggle:hover {
-    border-color: #cbd5e1; transform: translateY(-1px);
+    border-color: var(--fbc-cbd5e1); transform: translateY(-1px);
   }
   .fb-mode-toggle.is-on {
-    border-color: #185fa5; background: #eff6ff;
+    border-color: var(--fbc-185fa5); background: var(--fbc-eff6ff);
     box-shadow: 0 0 0 3px rgba(24,95,165,.12);
   }
   .fb-mode-toggle-check {
     width: 22px; height: 22px;
     border-radius: 6px;
-    background: #f3f4f6; color: #fff;
+    background: var(--fbc-f3f4f6); color: var(--fbc-fff);
     display: flex; align-items: center; justify-content: center;
     font-size: 13px; font-weight: 700;
     flex-shrink: 0;
     transition: background .12s;
   }
   .fb-mode-toggle.is-on .fb-mode-toggle-check {
-    background: #185fa5;
+    background: var(--fbc-185fa5);
   }
   .fb-mode-toggle-ico { font-size: 18px; line-height: 1; }
   .fb-mode-toggle-label { font-weight: 600; }
@@ -9228,7 +9900,7 @@ const STYLES = `
      exactly which channel the textarea below maps to. */
   .fb-composer-section-h {
     padding: 8px 14px 0;
-    font: 700 11.5px inherit; color: #475569;
+    font: 700 11.5px inherit; color: var(--fbc-475569);
     text-transform: uppercase; letter-spacing: .04em;
   }
 
@@ -9238,7 +9910,7 @@ const STYLES = `
     display: flex; flex-direction: column; gap: 6px;
   }
   .fb-recip-flat-h {
-    font: 600 14px inherit; color: #111827;
+    font: 600 14px inherit; color: var(--fbc-111827);
   }
   .fb-recip-lead {
     display: flex; align-items: center; gap: 12px;
@@ -9251,40 +9923,40 @@ const STYLES = `
     font-size: 13px; font-weight: 700; flex-none: 0;
   }
   .fb-recip-lead.is-on .fb-recip-lead-ico {
-    background: #dcfce7; color: #166534;
+    background: var(--fbc-dcfce7); color: var(--fbc-166534);
   }
   .fb-recip-lead.is-off .fb-recip-lead-ico {
-    background: #f3f4f6; color: #9ca3af;
+    background: var(--fbc-f3f4f6); color: var(--fbc-9ca3af);
   }
   .fb-recip-lead-text { display: flex; flex-direction: column; line-height: 1.25; }
-  .fb-recip-lead-l { font: 500 13.5px inherit; color: #111827; }
-  .fb-recip-lead.is-off .fb-recip-lead-l { color: #6b7280; }
-  .fb-recip-lead-s { font: 400 12px inherit; color: #9ca3af; margin-top: 2px; }
+  .fb-recip-lead-l { font: 500 13.5px inherit; color: var(--fbc-111827); }
+  .fb-recip-lead.is-off .fb-recip-lead-l { color: var(--fbc-6b7280); }
+  .fb-recip-lead-s { font: 400 12px inherit; color: var(--fbc-9ca3af); margin-top: 2px; }
 
   .fb-recip-also {
     display: flex; flex-direction: column; gap: 6px;
     padding-left: 0;
   }
   .fb-recip-also-l {
-    font: 500 12px inherit; color: #6b7280;
+    font: 500 12px inherit; color: var(--fbc-6b7280);
   }
   .fb-recip-prefix {
     display: inline-flex; align-items: center; gap: 4px;
-    color: #9ca3af; font: 500 12.5px inherit;
+    color: var(--fbc-9ca3af); font: 500 12.5px inherit;
     padding: 0 4px;
     transition: color .12s;
     user-select: none;
   }
-  .fb-recip-prefix.is-active { color: #475569; }
+  .fb-recip-prefix.is-active { color: var(--fbc-475569); }
   .fb-recip-prefix-count {
-    background: #e5e7eb; color: #475569;
+    background: var(--fbc-e5e7eb); color: var(--fbc-475569);
     padding: 1px 6px; border-radius: 999px;
     font: 600 10.5px inherit;
   }
   .fb-recip-toast {
     align-self: center;
     padding: 4px 10px; border-radius: 999px;
-    background: #f1f5f9; color: #475569;
+    background: var(--fbc-f1f5f9); color: var(--fbc-475569);
     font: 500 11.5px inherit;
     animation: fb-recip-toast-in .15s ease-out;
   }
@@ -9295,17 +9967,17 @@ const STYLES = `
 
   /* ── Issue 5: subject helper ──────────────────────────────────── */
   .fb-subject-help {
-    margin-top: 4px; font: 400 12px inherit; color: #6b7280;
+    margin-top: 4px; font: 400 12px inherit; color: var(--fbc-6b7280);
   }
 
   /* ── Issues 8 + 2: composer with attached chip rail ───────────── */
   .fb-composer {
-    border: 1px solid #e5e7eb; border-radius: 10px;
-    background: #fff;
+    border: 1px solid var(--fbc-e5e7eb); border-radius: 10px;
+    background: var(--fbc-fff);
     transition: border-color .12s, box-shadow .12s;
   }
   .fb-composer:focus-within {
-    border-color: #16a34a; box-shadow: 0 0 0 3px rgba(22,163,74,.10);
+    border-color: var(--fbc-16a34a); box-shadow: 0 0 0 3px rgba(22,163,74,.10);
   }
   .fb-composer-ta {
     display: block; width: 100%;
@@ -9338,30 +10010,30 @@ const STYLES = `
   .fb-composer-rail {
     display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
     padding: 8px 10px;
-    border-top: 1px solid #f1f5f9;
-    background: #fafafa;
+    border-top: 1px solid var(--fbc-f1f5f9);
+    background: var(--fbc-fafafa);
     border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;
   }
   .fb-chip-outline {
     display: inline-flex; align-items: center; gap: 4px;
-    background: transparent; border: 1px dashed #cbd5e1;
-    color: #475569; font: 500 12.5px inherit;
+    background: transparent; border: 1px dashed var(--fbc-cbd5e1);
+    color: var(--fbc-475569); font: 500 12.5px inherit;
     padding: 5px 10px; border-radius: 999px; cursor: pointer;
     margin-left: auto;
   }
-  .fb-chip-outline:hover { background: #f1f5f9; border-color: #94a3b8; }
+  .fb-chip-outline:hover { background: var(--fbc-f1f5f9); border-color: var(--fbc-94a3b8); }
   .fb-chip.is-flash {
     animation: fb-chip-flash .35s ease-out;
   }
   @keyframes fb-chip-flash {
-    0%   { background: #16a34a; color: #fff; transform: scale(1.06); }
-    100% { background: #f0fdf4; color: #166534; transform: scale(1); }
+    0%   { background: var(--fbc-16a34a); color: var(--fbc-fff); transform: scale(1.06); }
+    100% { background: var(--fbc-f0fdf4); color: var(--fbc-166534); transform: scale(1); }
   }
 
   /* ── Polish 3: char count line ────────────────────────────────── */
   .fb-charcount {
     margin-top: 6px;
-    font: 400 12px inherit; color: #94a3b8;
+    font: 400 12px inherit; color: var(--fbc-94a3b8);
     text-align: right;
     font-variant-numeric: tabular-nums;
   }
@@ -9378,7 +10050,7 @@ const STYLES = `
   .fb-prev-testdata-more {
     margin: 6px auto 0; display: block;
     background: transparent; border: 0; cursor: pointer;
-    color: #16a34a; font: 600 12px inherit;
+    color: var(--fbc-16a34a); font: 600 12px inherit;
   }
   .fb-prev-testdata-more:hover { text-decoration: underline; }
 
@@ -9390,14 +10062,14 @@ const STYLES = `
   .fb-prev-pill {
     display: inline-flex; align-items: center; gap: 4px;
     padding: 4px 10px; border-radius: 999px;
-    background: #f1f5f9; color: #334155;
+    background: var(--fbc-f1f5f9); color: var(--fbc-334155);
     font: 500 12px inherit;
   }
-  .fb-prev-pill.is-warn { background: #fef3c7; color: #92400e; }
+  .fb-prev-pill.is-warn { background: var(--fbc-fef3c7); color: var(--fbc-92400e); }
 
   /* ── Issue 6: friendly empty placeholder in phone preview ─────── */
   .fb-phone-empty {
-    color: #cbd5e1; font-style: italic;
+    color: var(--fbc-cbd5e1); font-style: italic;
   }
 
   /* ── Polish 5: footer Save + Send-a-test layout ───────────────── */
@@ -9406,7 +10078,7 @@ const STYLES = `
        of how far the user scrolls in the form. The body above scrolls;
        this footer sits at the bottom of the drawer at all times. */
     position: sticky; bottom: 0;
-    background: #fff;
+    background: var(--fbc-fff);
     border-top: 1px solid var(--fb-border);
     padding: 12px 22px;
     display: flex; align-items: center; justify-content: space-between;
@@ -9420,7 +10092,7 @@ const STYLES = `
      section so the user can predict where to look for what. */
   .fb-section-h-v2 {
     font: 700 16px inherit;
-    color: #0a0a0a;
+    color: var(--fbc-0a0a0a);
     margin: 0 0 10px;
     display: flex; align-items: center; gap: 8px;
     letter-spacing: 0;
@@ -9429,17 +10101,17 @@ const STYLES = `
   }
   /* Channel-tinted variants — saturated colors matching each mode
      toggle. Bigger, bolder so the section purpose reads at a glance. */
-  .fb-section-h-v2.is-email { color: #1e40af; }
-  .fb-section-h-v2.is-sms   { color: #5b21b6; }
-  .fb-section-h-v2.is-call  { color: #065f46; }
-  .fb-section-h-v2.is-both  { color: #0f172a; }
+  .fb-section-h-v2.is-email { color: var(--fbc-1e40af); }
+  .fb-section-h-v2.is-sms   { color: var(--fbc-5b21b6); }
+  .fb-section-h-v2.is-call  { color: var(--fbc-065f46); }
+  .fb-section-h-v2.is-both  { color: var(--fbc-0f172a); }
   .fb-helper-tight {
-    color: #475569;
+    color: var(--fbc-475569);
   }
   .fb-helper-tight {
     margin: 4px 0 0;
     font: 400 12.5px inherit;
-    color: #6b7280;
+    color: var(--fbc-6b7280);
     line-height: 1.4;
   }
   /* (Stale gray-bg .fb-mail-frame rule removed — the saturated-blue
@@ -9447,7 +10119,7 @@ const STYLES = `
   .fb-mail-frame-row { margin-bottom: 6px; }
   /* Insert: label above the variable chip rail */
   .fb-composer-rail-l {
-    font: 600 12px inherit; color: #475569;
+    font: 600 12px inherit; color: var(--fbc-475569);
     margin-right: 4px;
     align-self: center;
   }
@@ -9463,17 +10135,17 @@ const STYLES = `
     display: none !important;
   }
   .fb-preview-toggle {
-    background: #f8fafc; border: 1px solid var(--fb-border);
+    background: var(--fbc-f8fafc); border: 1px solid var(--fb-border);
     border-radius: 999px;
     padding: 6px 12px;
     font: 600 12px inherit;
-    color: #475569; cursor: pointer;
+    color: var(--fbc-475569); cursor: pointer;
     align-self: flex-end;
     margin-bottom: 10px;
     transition: background .12s, color .12s;
   }
   .fb-preview-toggle:hover {
-    background: #eff6ff; color: #185fa5;
+    background: var(--fbc-eff6ff); color: var(--fbc-185fa5);
   }
   .fb-drawer-preview.is-collapsed .fb-preview-toggle {
     writing-mode: vertical-rl;
@@ -9487,14 +10159,14 @@ const STYLES = `
   }
   .fb-drawer-test {
     background: transparent; border: 0; cursor: pointer;
-    color: #475569; font: 500 13px inherit;
+    color: var(--fbc-475569); font: 500 13px inherit;
     padding: 8px 6px;
   }
-  .fb-drawer-test:hover { color: #16a34a; text-decoration: underline; }
+  .fb-drawer-test:hover { color: var(--fbc-16a34a); text-decoration: underline; }
   .fb-drawer-testflash {
     position: absolute; left: 16px; right: 16px; bottom: calc(100% + 6px);
-    background: #f0fdf4; border: 1px solid #bbf7d0;
-    color: #166534; font: 500 12.5px inherit;
+    background: var(--fbc-f0fdf4); border: 1px solid var(--fbc-bbf7d0);
+    color: var(--fbc-166534); font: 500 12.5px inherit;
     padding: 6px 10px; border-radius: 8px;
     box-shadow: 0 4px 12px rgba(15,23,42,.08);
     animation: fb-recip-toast-in .15s ease-out;
@@ -9514,29 +10186,29 @@ const STYLES = `
   .fb-ich-loading {
     padding: 24px 6px;
     text-align: center;
-    color: #6b7280;
+    color: var(--fbc-6b7280);
     font-size: 13.5px;
   }
   .fb-ich-h {
     margin: 0 0 6px;
-    font-size: 16px; font-weight: 700; color: #0a0a0a;
+    font-size: 16px; font-weight: 700; color: var(--fbc-0a0a0a);
     letter-spacing: -0.01em;
   }
   .fb-ich-sub {
     margin: 0 0 16px;
-    font-size: 13px; color: #4b5563; line-height: 1.5;
+    font-size: 13px; color: var(--fbc-4b5563); line-height: 1.5;
   }
   .fb-ich-card {
-    background: #fff;
-    border: 1.5px solid #e5e7eb;
+    background: var(--fbc-fff);
+    border: 1.5px solid var(--fbc-e5e7eb);
     border-radius: 14px;
     padding: 14px 16px;
     margin-bottom: 12px;
     transition: border-color .14s ease, box-shadow .14s ease, background .14s ease;
   }
   .fb-ich-card.is-picked {
-    border-color: #10b981;
-    background: #f0fdf4;
+    border-color: var(--fbc-10b981);
+    background: var(--fbc-f0fdf4);
     box-shadow: 0 0 0 3px rgba(16,185,129,.10);
   }
   .fb-ich-card-h {
@@ -9549,17 +10221,17 @@ const STYLES = `
     flex: 1; min-width: 0;
   }
   .fb-ich-card-title {
-    font-size: 14.5px; font-weight: 700; color: #0a0a0a;
+    font-size: 14.5px; font-weight: 700; color: var(--fbc-0a0a0a);
     line-height: 1.2;
   }
   .fb-ich-card-sub {
     margin-top: 2px;
-    font-size: 12.5px; color: #4b5563; line-height: 1.4;
+    font-size: 12.5px; color: var(--fbc-4b5563); line-height: 1.4;
   }
   .fb-ich-pickdot {
     display: inline-flex; align-items: center; justify-content: center;
     width: 22px; height: 22px;
-    background: #10b981; color: #fff;
+    background: var(--fbc-10b981); color: var(--fbc-fff);
     border-radius: 50%;
     font-size: 12px; font-weight: 800;
     flex-shrink: 0;
@@ -9567,28 +10239,28 @@ const STYLES = `
   .fb-ich-empty {
     margin-top: 10px;
     padding: 10px 12px;
-    background: #fffbeb;
-    border: 1px solid #fde68a;
+    background: var(--fbc-fffbeb);
+    border: 1px solid var(--fbc-fde68a);
     border-radius: 10px;
     display: flex; align-items: center; gap: 12px;
     flex-wrap: wrap;
   }
   .fb-ich-empty-msg {
     margin: 0; flex: 1; min-width: 0;
-    font-size: 12.5px; color: #92400e; font-weight: 500;
+    font-size: 12.5px; color: var(--fbc-92400e); font-weight: 500;
   }
   .fb-ich-setup-btn {
     flex-shrink: 0;
     display: inline-flex; align-items: center; gap: 6px;
     padding: 8px 14px;
-    background: #185FA5; color: #fff;
+    background: var(--fbc-185fa5); color: var(--fbc-fff);
     border-radius: 8px;
     font-size: 12.5px; font-weight: 600;
     text-decoration: none;
     transition: background .12s ease, transform .12s ease;
   }
   .fb-ich-setup-btn:hover {
-    background: #144d85;
+    background: var(--fbc-144d85);
     transform: translateY(-1px);
   }
   .fb-ich-options {
@@ -9598,36 +10270,36 @@ const STYLES = `
   .fb-ich-option {
     display: flex; align-items: center; gap: 10px;
     padding: 10px 12px;
-    background: #fff;
-    border: 1.5px solid #e5e7eb;
+    background: var(--fbc-fff);
+    border: 1.5px solid var(--fbc-e5e7eb);
     border-radius: 10px;
     font-family: inherit; font-size: 13px; font-weight: 500;
-    color: #0a0a0a;
+    color: var(--fbc-0a0a0a);
     cursor: pointer;
     text-align: left;
     transition: border-color .12s ease, background .12s ease;
   }
   .fb-ich-option:hover {
-    border-color: #cbd5e1;
-    background: #f9fafb;
+    border-color: var(--fbc-cbd5e1);
+    background: var(--fbc-f9fafb);
   }
   .fb-ich-option.is-picked {
-    border-color: #10b981;
-    background: #ecfdf5;
+    border-color: var(--fbc-10b981);
+    background: var(--fbc-ecfdf5);
   }
   .fb-ich-radio {
     width: 18px; height: 18px;
-    border: 2px solid #cbd5e1;
+    border: 2px solid var(--fbc-cbd5e1);
     border-radius: 50%;
     flex-shrink: 0;
-    background: #fff;
+    background: var(--fbc-fff);
     transition: border-color .12s ease, background .12s ease;
     position: relative;
   }
   .fb-ich-option.is-picked .fb-ich-radio {
-    border-color: #10b981;
-    background: #10b981;
-    box-shadow: inset 0 0 0 3px #fff;
+    border-color: var(--fbc-10b981);
+    background: var(--fbc-10b981);
+    box-shadow: inset 0 0 0 3px var(--fbc-fff);
   }
   .fb-ich-option-name {
     flex: 1; min-width: 0;
@@ -9636,14 +10308,14 @@ const STYLES = `
   .fb-ich-make-another {
     margin-top: 4px;
     align-self: flex-start;
-    font-size: 12px; color: #185FA5; font-weight: 600;
+    font-size: 12px; color: var(--fbc-185fa5); font-weight: 600;
     text-decoration: none;
   }
   .fb-ich-make-another:hover { text-decoration: underline; }
   .fb-ich-badge-warn {
     flex-shrink: 0;
     padding: 2px 8px;
-    background: #fef3c7; color: #92400e;
+    background: var(--fbc-fef3c7); color: var(--fbc-92400e);
     border-radius: 999px;
     font-size: 10.5px; font-weight: 700;
     letter-spacing: .04em; text-transform: uppercase;
@@ -9658,32 +10330,17 @@ const STYLES = `
   .fb-ich.is-form-editor { width: 100%; }
   .fb-ich-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    grid-template-columns: 1fr;
     gap: 0;
     align-items: stretch;
   }
-  @media (max-width: 880px) {
-    .fb-ich-grid { grid-template-columns: 1fr; }
-  }
   .fb-ich-edit-pane {
-    min-width: 0; padding: 4px 28px 24px 4px;
-  }
-  .fb-ich-preview-pane {
-    min-width: 0; padding: 4px 4px 24px 28px;
-    background: #fafbfc;
-    border-left: 1px solid #e6e9ef;
-    margin-left: 8px;
-  }
-  @media (max-width: 880px) {
-    .fb-ich-preview-pane {
-      border-left: 0; border-top: 1px solid #e6e9ef;
-      margin-left: 0; padding-top: 24px;
-    }
+    min-width: 0; padding: 4px 4px 24px 4px;
   }
 
   /* Section header (.b-section-h) */
   .fb-bsection-h {
-    font-size: 11px; font-weight: 700; color: #9aa4b2;
+    font-size: 11px; font-weight: 700; color: var(--fbc-9aa4b2);
     text-transform: uppercase; letter-spacing: .05em;
     margin: 24px 0 10px;
   }
@@ -9691,20 +10348,20 @@ const STYLES = `
     display: flex; align-items: center; justify-content: space-between;
   }
   .fb-bsave-tag {
-    font-size: 11px; font-weight: 600; color: #0a8a3a;
+    font-size: 11px; font-weight: 600; color: var(--fbc-0a8a3a);
     text-transform: none; letter-spacing: 0;
   }
 
   /* Text input (.b-input) */
   .fb-binput {
     width: 100%; padding: 10px 12px;
-    border: 1px solid #e6e9ef; border-radius: 8px;
+    border: 1px solid var(--fbc-e6e9ef); border-radius: 8px;
     font: inherit; font-size: 14px;
-    background: #fff; color: #0a0a0a;
+    background: var(--fbc-fff); color: var(--fbc-0a0a0a);
     box-sizing: border-box;
   }
   .fb-binput:focus {
-    outline: none; border-color: #185fa5;
+    outline: none; border-color: var(--fbc-185fa5);
     box-shadow: 0 0 0 3px rgba(24,95,165,.12);
   }
 
@@ -9712,21 +10369,21 @@ const STYLES = `
   .fb-field-tabs {
     display: flex; gap: 6px;
     margin: 0 0 12px;
-    border-bottom: 1px solid #e6e9ef;
+    border-bottom: 1px solid var(--fbc-e6e9ef);
   }
   .fb-field-tab {
     padding: 8px 14px;
     background: transparent; border: 0;
     border-bottom: 2px solid transparent;
     margin-bottom: -1px;
-    font: 600 13.5px inherit; color: #6b7280;
+    font: 600 13.5px inherit; color: var(--fbc-6b7280);
     cursor: pointer;
     transition: color .12s, border-color .12s, background .12s;
   }
-  .fb-field-tab:hover { color: #185fa5; }
+  .fb-field-tab:hover { color: var(--fbc-185fa5); }
   .fb-field-tab.is-active {
-    color: #0f172a;
-    border-bottom-color: #185fa5;
+    color: var(--fbc-0f172a);
+    border-bottom-color: var(--fbc-185fa5);
   }
 
   /* Site-fields editor rows + snippet panel */
@@ -9734,7 +10391,7 @@ const STYLES = `
   .fb-sitefields-list { display: flex; flex-direction: column; gap: 8px; }
   .fb-sf-row {
     position: relative;
-    background: #fff; border: 1px solid #e5e7eb;
+    background: var(--fbc-fff); border: 1px solid var(--fbc-e5e7eb);
     border-radius: 10px;
     padding: 10px 12px 12px;
   }
@@ -9745,51 +10402,51 @@ const STYLES = `
     align-items: end;
   }
   .fb-sf-row-l {
-    font: 600 11.5px inherit; color: #6b7280;
+    font: 600 11.5px inherit; color: var(--fbc-6b7280);
     text-transform: uppercase; letter-spacing: .04em;
   }
   .fb-sf-key {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 13px;
   }
-  .fb-sf-key.is-error { border-color: #f87171; box-shadow: 0 0 0 3px rgba(248,113,113,.15); }
-  .fb-sf-error { color: #b91c1c; font: 500 12px inherit; margin: 4px 0 0; }
+  .fb-sf-key.is-error { border-color: var(--fbc-f87171); box-shadow: 0 0 0 3px rgba(248,113,113,.15); }
+  .fb-sf-error { color: var(--fbc-b91c1c); font: 500 12px inherit; margin: 4px 0 0; }
   .fb-sf-remove {
     position: absolute; top: 6px; right: 6px;
     background: transparent; border: 0; cursor: pointer;
     width: 24px; height: 24px; border-radius: 6px;
-    color: #9ca3af; font-size: 18px; line-height: 1;
+    color: var(--fbc-9ca3af); font-size: 18px; line-height: 1;
   }
-  .fb-sf-remove:hover { background: #fee2e2; color: #b91c1c; }
+  .fb-sf-remove:hover { background: var(--fbc-fee2e2); color: var(--fbc-b91c1c); }
 
   .fb-sf-snippet {
     margin-top: 14px;
     padding: 14px 14px 4px;
-    background: #f8fafc; border: 1px solid #e6e9ef;
+    background: var(--fbc-f8fafc); border: 1px solid var(--fbc-e6e9ef);
     border-radius: 12px;
   }
   .fb-sf-snippet-h {
-    font: 700 13px inherit; color: #0a0a0a;
+    font: 700 13px inherit; color: var(--fbc-0a0a0a);
     margin-bottom: 4px;
   }
   .fb-sf-snippet-block { margin-bottom: 12px; }
   .fb-sf-snippet-row {
     display: flex; align-items: center; justify-content: space-between;
-    font: 600 11.5px inherit; color: #475569;
+    font: 600 11.5px inherit; color: var(--fbc-475569);
     text-transform: uppercase; letter-spacing: .04em;
     margin-bottom: 4px;
   }
   .fb-sf-copy {
-    background: #fff; border: 1px solid #cdd7e3;
-    color: #185fa5; cursor: pointer;
+    background: var(--fbc-fff); border: 1px solid var(--fbc-cdd7e3);
+    color: var(--fbc-185fa5); cursor: pointer;
     padding: 3px 10px; border-radius: 999px;
     font: 600 11.5px inherit;
     text-transform: none; letter-spacing: 0;
   }
-  .fb-sf-copy:hover { background: #eff6ff; }
+  .fb-sf-copy:hover { background: var(--fbc-eff6ff); }
   .fb-sf-code {
     margin: 0; padding: 10px 12px;
-    background: #0f172a; color: #e2e8f0;
+    background: var(--fbc-0f172a); color: var(--fbc-e2e8f0);
     border-radius: 8px;
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 12px; line-height: 1.55;
@@ -9799,74 +10456,74 @@ const STYLES = `
   .fb-sf-recipe-tabs {
     display: flex; gap: 4px;
     margin-bottom: 6px;
-    background: #eef2f7;
+    background: var(--fbc-eef2f7);
     padding: 3px;
     border-radius: 8px;
     width: fit-content;
   }
   .fb-sf-recipe-tab {
     background: transparent; border: 0;
-    color: #475569; cursor: pointer;
+    color: var(--fbc-475569); cursor: pointer;
     padding: 5px 12px; border-radius: 6px;
     font: 600 12px inherit;
   }
-  .fb-sf-recipe-tab:hover { color: #0f172a; }
+  .fb-sf-recipe-tab:hover { color: var(--fbc-0f172a); }
   .fb-sf-recipe-tab.is-active {
-    background: #fff; color: #0f172a;
+    background: var(--fbc-fff); color: var(--fbc-0f172a);
     box-shadow: 0 1px 2px rgba(15,23,42,.08);
   }
 
   .fb-fields { /* container for field cards */ }
   .fb-fields-empty {
     text-align: center; padding: 20px 12px;
-    color: #5a6470; font-size: 13px;
-    border: 1px dashed #e6e9ef; border-radius: 10px;
+    color: var(--fbc-5a6470); font-size: 13px;
+    border: 1px dashed var(--fbc-e6e9ef); border-radius: 10px;
   }
 
   /* Field card (.fld-card) */
   .fb-fld-card {
-    background: #fff; border: 1px solid #e6e9ef;
+    background: var(--fbc-fff); border: 1px solid var(--fbc-e6e9ef);
     border-radius: 10px; padding: 10px 12px; margin-bottom: 10px;
     display: flex; align-items: center; gap: 10px;
     transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
     position: relative;
   }
-  .fb-fld-card:hover { border-color: #bcc7d4; }
+  .fb-fld-card:hover { border-color: var(--fbc-bcc7d4); }
   .fb-fld-card.is-dragging {
     opacity: .45; box-shadow: 0 6px 18px rgba(15,23,42,.12);
   }
   .fb-fld-card.drop-above::before,
   .fb-fld-card.drop-below::after {
     content: ""; position: absolute; left: 0; right: 0; height: 3px;
-    background: #2563eb; border-radius: 2px;
+    background: var(--fbc-2563eb); border-radius: 2px;
     box-shadow: 0 0 0 2px rgba(37,99,235,.18);
     pointer-events: none;
   }
   .fb-fld-card.drop-above::before { top: -6px; }
   .fb-fld-card.drop-below::after  { bottom: -6px; }
   .fb-fld-handle {
-    color: #9aa4b2; cursor: grab; user-select: none;
+    color: var(--fbc-9aa4b2); cursor: grab; user-select: none;
     font-size: 14px; line-height: 1;
     padding: 4px 2px;
   }
-  .fb-fld-handle:hover { color: #475569; }
+  .fb-fld-handle:hover { color: var(--fbc-475569); }
   .fb-fld-handle:active { cursor: grabbing; }
   .fb-fld-ico {
     width: 28px; height: 28px; border-radius: 8px; flex: 0 0 auto;
     display: flex; align-items: center; justify-content: center;
-    font-size: 16px; line-height: 1; background: #f0f4f9;
+    font-size: 16px; line-height: 1; background: var(--fbc-f0f4f9);
   }
   .fb-fld-label {
-    flex: 1; font-size: 14px; font-weight: 500; color: #0a0a0a;
+    flex: 1; font-size: 14px; font-weight: 500; color: var(--fbc-0a0a0a);
     cursor: text; padding: 4px 6px; border-radius: 5px;
     border: 1px solid transparent; min-width: 0;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
-  .fb-fld-label:hover { background: #f5f7fa; }
+  .fb-fld-label:hover { background: var(--fbc-f5f7fa); }
   .fb-fld-label-input {
     flex: 1; font: inherit; font-size: 14px; font-weight: 500;
-    padding: 4px 6px; border: 1px solid #185fa5; border-radius: 5px;
-    outline: none; min-width: 0; background: #fff; color: #0a0a0a;
+    padding: 4px 6px; border: 1px solid var(--fbc-185fa5); border-radius: 5px;
+    outline: none; min-width: 0; background: var(--fbc-fff); color: var(--fbc-0a0a0a);
   }
   .fb-fld-req-pill {
     background: transparent; border: 0; cursor: pointer; font: inherit;
@@ -9875,49 +10532,49 @@ const STYLES = `
     display: inline-flex; align-items: center; gap: 5px;
   }
   .fb-fld-req-dot { width: 5px; height: 5px; border-radius: 99px; background: currentColor; }
-  .fb-fld-req-pill.is-req { background: #e6f6ec; color: #0a8a3a; }
-  .fb-fld-req-pill.is-opt { background: #eef0f3; color: #5a6470; }
+  .fb-fld-req-pill.is-req { background: var(--fbc-e6f6ec); color: var(--fbc-0a8a3a); }
+  .fb-fld-req-pill.is-opt { background: var(--fbc-eef0f3); color: var(--fbc-5a6470); }
   .fb-fld-del {
     border: 0; background: transparent; cursor: pointer; padding: 4px 8px;
-    color: #9aa4b2; font-size: 18px; line-height: 1;
+    color: var(--fbc-9aa4b2); font-size: 18px; line-height: 1;
     opacity: 0; transition: opacity .12s;
   }
   .fb-fld-card:hover .fb-fld-del { opacity: 1; }
-  .fb-fld-del:hover { color: #c0392b; }
+  .fb-fld-del:hover { color: var(--fbc-c0392b); }
 
   /* + Add field dropdown (.add-fld-wrap / .add-fld-menu) */
   .fb-add-fld-wrap { position: relative; margin-top: 6px; }
   .fb-add-fld-btn {
     padding: 9px 14px;
-    background: #fff; border: 1px solid #e6e9ef;
+    background: var(--fbc-fff); border: 1px solid var(--fbc-e6e9ef);
     border-radius: 10px; cursor: pointer;
     font: inherit; font-size: 13.5px; font-weight: 600;
-    color: #0a0a0a;
+    color: var(--fbc-0a0a0a);
     display: inline-flex; align-items: center; gap: 6px;
   }
-  .fb-add-fld-btn:hover { background: #f5f7fa; border-color: #cdd7e3; }
-  .fb-add-fld-caret { color: #9aa4b2; }
+  .fb-add-fld-btn:hover { background: var(--fbc-f5f7fa); border-color: var(--fbc-cdd7e3); }
+  .fb-add-fld-caret { color: var(--fbc-9aa4b2); }
   .fb-add-fld-menu {
     position: absolute; top: calc(100% + 4px); left: 0;
-    background: #fff; border: 1px solid #e6e9ef; border-radius: 10px;
+    background: var(--fbc-fff); border: 1px solid var(--fbc-e6e9ef); border-radius: 10px;
     box-shadow: 0 6px 20px rgba(20,40,80,.10);
     min-width: 240px; padding: 8px 0; z-index: 50;
     max-height: 60vh; overflow: auto;
   }
   .fb-add-fld-section {
-    font-size: 11px; font-weight: 700; color: #9aa4b2;
+    font-size: 11px; font-weight: 700; color: var(--fbc-9aa4b2);
     text-transform: uppercase; letter-spacing: .04em;
     padding: 6px 14px;
   }
   .fb-add-fld-item {
     display: flex; align-items: center; gap: 10px;
     padding: 8px 14px; cursor: pointer; font-size: 13.5px;
-    color: #0a0a0a;
+    color: var(--fbc-0a0a0a);
   }
-  .fb-add-fld-item:hover { background: #f5f7fa; }
+  .fb-add-fld-item:hover { background: var(--fbc-f5f7fa); }
   .fb-add-fld-ico { font-size: 18px; line-height: 1; }
-  .fb-add-fld-divider { height: 1px; background: #e6e9ef; margin: 6px 0; }
-  .fb-add-fld-none { padding: 8px 14px; color: #5a6470; font-size: 12.5px; }
+  .fb-add-fld-divider { height: 1px; background: var(--fbc-e6e9ef); margin: 6px 0; }
+  .fb-add-fld-none { padding: 8px 14px; color: var(--fbc-5a6470); font-size: 12.5px; }
 
   /* Live preview pane (.builder-preview + the in-pane card render) */
   .fb-bpreview { display: flex; flex-direction: column; gap: 14px; }
@@ -9926,50 +10583,50 @@ const STYLES = `
     flex: 1; display: flex; flex-direction: column; align-items: center;
     justify-content: center; gap: 10px;
     padding: 40px 20px; min-height: 220px;
-    border: 1.5px dashed #d4d8df; border-radius: 14px;
-    background: #fff; color: #5a6470;
+    border: 1.5px dashed var(--fbc-d4d8df); border-radius: 14px;
+    background: var(--fbc-fff); color: var(--fbc-5a6470);
     font-size: 13.5px; text-align: center;
   }
   .fb-bpreview-empty-ico { font-size: 30px; }
   .fb-bpreview-empty p { margin: 0; }
   .fb-bpreview-h {
-    font-size: 11px; font-weight: 700; color: #9aa4b2;
+    font-size: 11px; font-weight: 700; color: var(--fbc-9aa4b2);
     text-transform: uppercase; letter-spacing: .05em;
   }
   .fb-bpreview-card {
-    background: #fff; border: 1px solid #e6e9ef; border-radius: 12px;
+    background: var(--fbc-fff); border: 1px solid var(--fbc-e6e9ef); border-radius: 12px;
     padding: 18px;
     box-shadow: 0 1px 3px rgba(20,40,80,.04);
   }
-  .fb-bpreview-title { margin: 0 0 4px; font-size: 18px; font-weight: 600; color: #0a0a0a; }
+  .fb-bpreview-title { margin: 0 0 4px; font-size: 18px; font-weight: 600; color: var(--fbc-0a0a0a); }
   .fb-bpreview-blank {
-    color: #aaa; font-size: 13px; text-align: center;
+    color: var(--fbc-aaa); font-size: 13px; text-align: center;
     padding: 24px 12px;
-    border: 1px dashed #e6e9ef; border-radius: 8px;
+    border: 1px dashed var(--fbc-e6e9ef); border-radius: 8px;
   }
   .fb-bpreview-field { margin-bottom: 14px; }
   .fb-bpreview-label {
     display: block; font-size: 13px; font-weight: 600;
-    color: #0a0a0a; margin-bottom: 6px;
+    color: var(--fbc-0a0a0a); margin-bottom: 6px;
   }
-  .fb-bpreview-req { color: #c0392b; }
+  .fb-bpreview-req { color: var(--fbc-c0392b); }
   .fb-bpreview-submit {
     width: 100%; padding: 11px;
-    background: #185fa5; color: #fff;
+    background: var(--fbc-185fa5); color: var(--fbc-fff);
     border: 0; border-radius: 8px;
     font-weight: 600; font-size: 14px;
     margin-top: 6px; cursor: not-allowed;
   }
   .fb-bpreview-thanks {
     padding: 12px 14px;
-    background: #fff; border: 1px dashed #e6e9ef; border-radius: 10px;
+    background: var(--fbc-fff); border: 1px dashed var(--fbc-e6e9ef); border-radius: 10px;
   }
   .fb-bpreview-thanks-h {
-    font-size: 11px; font-weight: 700; color: #9aa4b2;
+    font-size: 11px; font-weight: 700; color: var(--fbc-9aa4b2);
     text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px;
   }
   .fb-bpreview-thanks-t {
-    font-size: 13.5px; color: #0a0a0a; font-style: italic;
+    font-size: 13.5px; color: var(--fbc-0a0a0a); font-style: italic;
   }
 
   .fb-wait-row {
@@ -9978,7 +10635,7 @@ const STYLES = `
   .fb-wait-num {
     width: 80px; text-align: center; font-size: 16px; font-weight: 700;
   }
-  .fb-wait-unit { font-size: 14px; color: #4b5563; }
+  .fb-wait-unit { font-size: 14px; color: var(--fbc-4b5563); }
 
   /* ── Call activity panel (5-year-old simple) ─────────────────────────
      Numbered rows + a friendly tone picker + a "what'll happen" list.
@@ -9994,14 +10651,14 @@ const STYLES = `
   }
   .fb-call-row-num {
     width: 30px; height: 30px; border-radius: 50%;
-    background: #185fa5; color: #fff;
+    background: var(--fbc-185fa5); color: var(--fbc-fff);
     display: flex; align-items: center; justify-content: center;
     font: 700 14px inherit; line-height: 1;
     flex-shrink: 0;
   }
   .fb-call-row-body { min-width: 0; }
   .fb-call-label {
-    display: block; font: 600 14.5px inherit; color: #0a0a0a;
+    display: block; font: 600 14.5px inherit; color: var(--fbc-0a0a0a);
     margin-bottom: 8px;
   }
   .fb-call-target { display: flex; flex-direction: column; gap: 8px; }
@@ -10009,16 +10666,16 @@ const STYLES = `
     display: grid; grid-template-columns: 36px 1fr; gap: 12px;
     align-items: start;
     padding: 12px 14px;
-    background: #fff; border: 1.5px solid #e5e7eb;
+    background: var(--fbc-fff); border: 1.5px solid var(--fbc-e5e7eb);
     border-radius: 12px; cursor: pointer;
-    font: inherit; color: #0a0a0a; text-align: left;
+    font: inherit; color: var(--fbc-0a0a0a); text-align: left;
     transition: border-color .12s, background .12s, transform .12s;
   }
   .fb-call-target-card:hover {
-    border-color: #cbd5e1; transform: translateY(-1px);
+    border-color: var(--fbc-cbd5e1); transform: translateY(-1px);
   }
   .fb-call-target-card.is-picked {
-    border-color: #185fa5; background: #eff6ff;
+    border-color: var(--fbc-185fa5); background: var(--fbc-eff6ff);
     box-shadow: 0 0 0 3px rgba(24,95,165,.12);
   }
   .fb-call-target-ico {
@@ -10029,7 +10686,7 @@ const STYLES = `
     display: flex; flex-direction: column; gap: 3px; min-width: 0;
   }
   .fb-call-target-title { font-size: 14px; font-weight: 600; }
-  .fb-call-target-sub   { font-size: 12.5px; color: #5a6470; }
+  .fb-call-target-sub   { font-size: 12.5px; color: var(--fbc-5a6470); }
 
   /* Email recipient picker — first thing in the standalone Email
      drawer, designed to read at a glance: big icon, plain title,
@@ -10040,12 +10697,12 @@ const STYLES = `
     margin: 0 0 16px;
     padding: 16px 18px;
     border-radius: 16px;
-    background: linear-gradient(180deg, #f0f7ff 0%, #ffffff 80%);
-    border: 1px solid #dbeafe;
+    background: linear-gradient(180deg, var(--fbc-f0f7ff) 0%, var(--fbc-ffffff) 80%);
+    border: 1px solid var(--fbc-dbeafe);
   }
   .fb-erecip-h {
     display: flex; align-items: center; gap: 8px;
-    font: 700 15px inherit; color: #0a0a0a;
+    font: 700 15px inherit; color: var(--fbc-0a0a0a);
     margin-bottom: 12px;
   }
   .fb-erecip-h-ico { font-size: 20px; line-height: 1; }
@@ -10059,21 +10716,21 @@ const STYLES = `
     align-items: center;
     gap: 14px;
     padding: 14px 16px;
-    background: #fff;
-    border: 2px solid #e5e7eb;
+    background: var(--fbc-fff);
+    border: 2px solid var(--fbc-e5e7eb);
     border-radius: 14px;
     cursor: pointer;
-    font: inherit; color: #0a0a0a; text-align: left;
+    font: inherit; color: var(--fbc-0a0a0a); text-align: left;
     transition: border-color .14s, transform .14s, box-shadow .14s, background .14s;
   }
   .fb-erecip-card:hover:not(.is-disabled) {
-    border-color: #93c5fd;
+    border-color: var(--fbc-93c5fd);
     transform: translateY(-1px);
     box-shadow: 0 6px 14px rgba(15,23,42,.06);
   }
   .fb-erecip-card.is-picked {
-    border-color: #2563eb;
-    background: #eff6ff;
+    border-color: var(--fbc-2563eb);
+    background: var(--fbc-eff6ff);
     box-shadow: 0 0 0 4px rgba(37,99,235,.12);
   }
   .fb-erecip-card.is-disabled {
@@ -10081,13 +10738,13 @@ const STYLES = `
   }
   .fb-erecip-card-ico {
     width: 44px; height: 44px; border-radius: 50%;
-    background: #dbeafe;
+    background: var(--fbc-dbeafe);
     display: flex; align-items: center; justify-content: center;
     font-size: 22px; line-height: 1;
     flex-shrink: 0;
   }
   .fb-erecip-card.is-picked .fb-erecip-card-ico {
-    background: #2563eb; color: #fff;
+    background: var(--fbc-2563eb); color: var(--fbc-fff);
   }
   .fb-erecip-card-body {
     display: flex; flex-direction: column; gap: 3px; min-width: 0;
@@ -10096,7 +10753,7 @@ const STYLES = `
     font-size: 14.5px; font-weight: 600; line-height: 1.25;
   }
   .fb-erecip-card-sub {
-    font-size: 12.5px; color: #5a6470; line-height: 1.4;
+    font-size: 12.5px; color: var(--fbc-5a6470); line-height: 1.4;
   }
   .fb-erecip-card-mark {
     width: 24px; height: 24px; border-radius: 50%;
@@ -10106,50 +10763,50 @@ const STYLES = `
     color: transparent;
   }
   .fb-erecip-card.is-picked .fb-erecip-card-mark {
-    background: #2563eb; color: #fff;
+    background: var(--fbc-2563eb); color: var(--fbc-fff);
   }
   .fb-erecip-detail {
     margin-top: 12px;
     width: 100%;
     padding: 12px 14px !important;
     font-size: 14px !important;
-    border: 2px solid #dbeafe !important;
+    border: 2px solid var(--fbc-dbeafe) !important;
     border-radius: 12px;
-    background: #fff;
+    background: var(--fbc-fff);
   }
   .fb-erecip-detail:focus {
-    border-color: #2563eb !important;
+    border-color: var(--fbc-2563eb) !important;
     box-shadow: 0 0 0 3px rgba(37,99,235,.15) !important;
   }
   /* Call-channel variant — mint-green color scheme matching the
      channel-coded cards used elsewhere on the canvas (e.g. the
      Notify Me call sub-section). */
   .fb-erecip.is-call {
-    background: linear-gradient(180deg, #ecfdf5 0%, #ffffff 80%);
-    border-color: #a7f3d0;
+    background: linear-gradient(180deg, var(--fbc-ecfdf5) 0%, var(--fbc-ffffff) 80%);
+    border-color: var(--fbc-a7f3d0);
   }
   .fb-erecip.is-call .fb-erecip-card-ico {
-    background: #d1fae5;
+    background: var(--fbc-d1fae5);
   }
   .fb-erecip.is-call .fb-erecip-card:hover:not(.is-disabled) {
-    border-color: #6ee7b7;
+    border-color: var(--fbc-6ee7b7);
   }
   .fb-erecip.is-call .fb-erecip-card.is-picked {
-    border-color: #059669;
-    background: #ecfdf5;
+    border-color: var(--fbc-059669);
+    background: var(--fbc-ecfdf5);
     box-shadow: 0 0 0 4px rgba(5,150,105,.15);
   }
   .fb-erecip.is-call .fb-erecip-card.is-picked .fb-erecip-card-ico {
-    background: #059669; color: #fff;
+    background: var(--fbc-059669); color: var(--fbc-fff);
   }
   .fb-erecip.is-call .fb-erecip-card.is-picked .fb-erecip-card-mark {
-    background: #059669; color: #fff;
+    background: var(--fbc-059669); color: var(--fbc-fff);
   }
   .fb-erecip.is-call .fb-erecip-detail {
-    border-color: #a7f3d0 !important;
+    border-color: var(--fbc-a7f3d0) !important;
   }
   .fb-erecip.is-call .fb-erecip-detail:focus {
-    border-color: #059669 !important;
+    border-color: var(--fbc-059669) !important;
     box-shadow: 0 0 0 3px rgba(5,150,105,.15) !important;
   }
   /* Voice preview play button — sits in the call composer header so
@@ -10162,7 +10819,7 @@ const STYLES = `
   .fb-voice-preview-btn {
     display: inline-flex; align-items: center; gap: 6px;
     padding: 6px 12px;
-    background: #059669; color: #fff;
+    background: var(--fbc-059669); color: var(--fbc-fff);
     border: 0; border-radius: 999px;
     font: 600 12.5px inherit;
     cursor: pointer;
@@ -10170,24 +10827,24 @@ const STYLES = `
     transition: background .14s, transform .14s, box-shadow .14s;
   }
   .fb-voice-preview-btn:hover:not(:disabled) {
-    background: #047857;
+    background: var(--fbc-047857);
     transform: translateY(-1px);
     box-shadow: 0 4px 10px rgba(5,150,105,.22);
   }
   .fb-voice-preview-btn:disabled {
-    background: #cbd5e1; color: #fff;
+    background: var(--fbc-cbd5e1); color: var(--fbc-fff);
     cursor: not-allowed; box-shadow: none;
   }
   .fb-voice-preview-btn.playing {
-    background: #b91c1c;
+    background: var(--fbc-b91c1c);
   }
   .fb-voice-preview-btn.playing:hover {
-    background: #991b1b;
+    background: var(--fbc-991b1b);
   }
   .fb-voice-preview-spinner {
     width: 12px; height: 12px;
     border: 2px solid rgba(255,255,255,.4);
-    border-top-color: #fff;
+    border-top-color: var(--fbc-fff);
     border-radius: 50%;
     animation: fb-vp-spin .8s linear infinite;
   }
@@ -10197,8 +10854,8 @@ const STYLES = `
   .fb-voice-preview-err {
     margin: 6px 14px 0;
     padding: 6px 10px;
-    background: #fef2f2; border: 1px solid #fecaca;
-    color: #991b1b;
+    background: var(--fbc-fef2f2); border: 1px solid var(--fbc-fecaca);
+    color: var(--fbc-991b1b);
     font-size: 12.5px;
     border-radius: 8px;
   }
@@ -10213,31 +10870,31 @@ const STYLES = `
   .fb-tone-card {
     display: flex; flex-direction: column; align-items: center; gap: 4px;
     padding: 12px 8px;
-    background: #fff; border: 1.5px solid #e5e7eb;
+    background: var(--fbc-fff); border: 1.5px solid var(--fbc-e5e7eb);
     border-radius: 12px; cursor: pointer;
-    font: inherit; color: #0a0a0a;
+    font: inherit; color: var(--fbc-0a0a0a);
     transition: border-color .12s, background .12s, transform .12s;
   }
   .fb-tone-card:hover {
-    border-color: #cbd5e1; transform: translateY(-1px);
+    border-color: var(--fbc-cbd5e1); transform: translateY(-1px);
   }
   .fb-tone-card.is-picked {
-    border-color: #185fa5; background: #eff6ff;
+    border-color: var(--fbc-185fa5); background: var(--fbc-eff6ff);
     box-shadow: 0 0 0 3px rgba(24,95,165,.12);
   }
   .fb-tone-card-ico { font-size: 24px; line-height: 1; }
   .fb-tone-card-label { font-size: 13px; font-weight: 600; }
   .fb-call-summary {
     margin-top: 4px; padding: 14px 16px;
-    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;
+    background: var(--fbc-f8fafc); border: 1px solid var(--fbc-e2e8f0); border-radius: 12px;
   }
   .fb-call-summary-h {
-    font-size: 12.5px; font-weight: 700; color: #475569;
+    font-size: 12.5px; font-weight: 700; color: var(--fbc-475569);
     text-transform: uppercase; letter-spacing: .04em; margin-bottom: 8px;
   }
   .fb-call-summary-list {
     margin: 0; padding-left: 18px;
-    font-size: 14px; line-height: 1.6; color: #0a0a0a;
+    font-size: 14px; line-height: 1.6; color: var(--fbc-0a0a0a);
   }
   .fb-call-summary-list li { margin-bottom: 2px; }
 
@@ -10246,13 +10903,13 @@ const STYLES = `
     display: flex; flex-direction: column; align-items: center; gap: 8px;
   }
   .fb-drawer-preview-l {
-    font-size: 12px; font-weight: 700; color: #4b5563;
+    font-size: 12px; font-weight: 700; color: var(--fbc-4b5563);
     letter-spacing: .03em; text-transform: uppercase;
     align-self: flex-start;
   }
   .fb-phone {
     width: 280px; height: 480px;
-    background: #1c1c1e; border-radius: 36px;
+    background: var(--fbc-1c1c1e); border-radius: 36px;
     padding: 10px;
     box-shadow: 0 12px 28px rgba(15,23,42,.2);
     position: relative;
@@ -10260,29 +10917,29 @@ const STYLES = `
   .fb-phone-notch {
     position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
     width: 90px; height: 22px;
-    background: #1c1c1e; border-radius: 14px;
+    background: var(--fbc-1c1c1e); border-radius: 14px;
     z-index: 1;
   }
   .fb-phone-screen {
     width: 100%; height: 100%;
-    background: #f5f5f7; border-radius: 28px;
+    background: var(--fbc-f5f5f7); border-radius: 28px;
     overflow: hidden;
     display: flex; flex-direction: column;
     padding: 36px 12px 12px;
   }
   .fb-phone-statusbar {
     display: flex; justify-content: space-between;
-    font-size: 12px; font-weight: 700; color: #1c1c1e;
+    font-size: 12px; font-weight: 700; color: var(--fbc-1c1c1e);
     padding: 0 4px 8px;
   }
   /* SMS view */
   .fb-phone-sms { padding: 8px 4px; }
   .fb-phone-sms-from {
-    text-align: center; font-size: 11.5px; color: #6b7280;
+    text-align: center; font-size: 11.5px; color: var(--fbc-6b7280);
     margin-bottom: 8px;
   }
   .fb-phone-sms-bubble {
-    background: #e9e9eb; color: #1c1c1e;
+    background: var(--fbc-e9e9eb); color: var(--fbc-1c1c1e);
     padding: 9px 13px; border-radius: 18px;
     font-size: 13px; line-height: 1.4;
     max-width: 80%; margin-right: auto;
@@ -10290,50 +10947,50 @@ const STYLES = `
   }
   /* Email view */
   .fb-phone-mail {
-    background: #fff; border-radius: 12px;
+    background: var(--fbc-fff); border-radius: 12px;
     padding: 14px;
     box-shadow: 0 1px 3px rgba(15,23,42,.06);
     margin: 6px 2px;
     overflow-y: auto;
   }
   .fb-phone-mail-from {
-    font-size: 12px; color: #1c1c1e; margin-bottom: 4px;
+    font-size: 12px; color: var(--fbc-1c1c1e); margin-bottom: 4px;
   }
   .fb-phone-mail-subject {
-    font-size: 14px; font-weight: 700; color: #0a0a0a;
+    font-size: 14px; font-weight: 700; color: var(--fbc-0a0a0a);
     margin-bottom: 6px;
   }
   .fb-phone-mail-body {
-    font-size: 12.5px; color: #1c1c1e; line-height: 1.5;
+    font-size: 12.5px; color: var(--fbc-1c1c1e); line-height: 1.5;
     white-space: pre-wrap; word-wrap: break-word;
   }
-  .fb-phone-empty { color: #9ca3af; font-style: italic; }
+  .fb-phone-empty { color: var(--fbc-9ca3af); font-style: italic; }
   .fb-phone-call {
     padding: 12px 14px;
-    background: #ecfdf5;
-    border: 1px solid #a7f3d0; border-radius: 12px;
+    background: var(--fbc-ecfdf5);
+    border: 1px solid var(--fbc-a7f3d0); border-radius: 12px;
   }
   .fb-phone-call-h {
-    font: 700 12px inherit; color: #047857;
+    font: 700 12px inherit; color: var(--fbc-047857);
     text-transform: uppercase; letter-spacing: .04em;
     margin-bottom: 6px;
   }
   .fb-phone-call-body {
-    font-size: 12.5px; color: #064e3b; line-height: 1.5;
+    font-size: 12.5px; color: var(--fbc-064e3b); line-height: 1.5;
     white-space: pre-wrap; word-wrap: break-word;
   }
   .fb-phone-wait {
-    text-align: center; padding: 40px 16px; color: #6b7280;
+    text-align: center; padding: 40px 16px; color: var(--fbc-6b7280);
   }
   .fb-phone-wait-ico { font-size: 40px; margin-bottom: 8px; }
-  .fb-phone-wait-h { font-size: 14px; font-weight: 700; color: #0a0a0a; }
+  .fb-phone-wait-h { font-size: 14px; font-weight: 700; color: var(--fbc-0a0a0a); }
   .fb-phone-wait-p { font-size: 12px; margin-top: 4px; }
 
   /* ── Reply Widget editor + preview ────────────────────────────────── */
   .fb-replywidget-section { margin-bottom: 40px; }
   .fb-replywidget-section:last-child { margin-bottom: 0; }
   .fb-replywidget-section .fb-drawer-l {
-    font-size: 17px; font-weight: 700; color: #0a0a0a;
+    font-size: 17px; font-weight: 700; color: var(--fbc-0a0a0a);
     letter-spacing: -0.01em; margin-bottom: 16px; display: block;
   }
 
@@ -10353,8 +11010,8 @@ const STYLES = `
   .fb-rwbody-chips { margin-top: 16px; gap: 10px; }
   .fb-rwbody-preview {
     padding: 22px 24px;
-    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-    border: 1.5px solid #e2e8f0; border-radius: 16px;
+    background: linear-gradient(180deg, var(--fbc-f8fafc) 0%, var(--fbc-f1f5f9) 100%);
+    border: 1.5px solid var(--fbc-e2e8f0); border-radius: 16px;
     /* Match the textarea side's combined height so the columns line up.
        textarea (220) + label (~32) + chips (~46) ≈ 298. */
     min-height: 220px;
@@ -10362,10 +11019,10 @@ const STYLES = `
   .fb-rwbody-preview-eye {
     font-size: 11.5px; font-weight: 700;
     letter-spacing: 0.08em; text-transform: uppercase;
-    color: #6b7280; margin-bottom: 12px;
+    color: var(--fbc-6b7280); margin-bottom: 12px;
   }
   .fb-rwbody-preview-body {
-    font-size: 15.5px; line-height: 1.65; color: #0a0a0a;
+    font-size: 15.5px; line-height: 1.65; color: var(--fbc-0a0a0a);
     white-space: pre-wrap; word-wrap: break-word;
   }
 
@@ -10384,10 +11041,10 @@ const STYLES = `
     background: rgba(15,23,42,0.04);
   }
   .fb-rwprev-nudge .fb-rwprev-nudge-head strong {
-    font-size: 16px; font-weight: 700; color: #0a0a0a;
+    font-size: 16px; font-weight: 700; color: var(--fbc-0a0a0a);
   }
   .fb-rwprev-nudge .fb-rwprev-nudge-head span {
-    font-size: 13.5px; color: #6b7280; font-weight: 500;
+    font-size: 13.5px; color: var(--fbc-6b7280); font-weight: 500;
   }
   .fb-rwprev-edit-ico {
     margin-left: auto;
@@ -10413,28 +11070,28 @@ const STYLES = `
     width: 100%; box-sizing: border-box;
     padding: 12px 14px;
     font-size: 14px; line-height: 1.5; font-family: inherit;
-    color: #0a0a0a;
-    background: #fff;
-    border: 1.5px solid #cbd5e1; border-radius: 10px;
+    color: var(--fbc-0a0a0a);
+    background: var(--fbc-fff);
+    border: 1.5px solid var(--fbc-cbd5e1); border-radius: 10px;
     resize: vertical; min-height: 70px;
     transition: border-color 0.14s ease, box-shadow 0.14s ease;
   }
   .fb-rwprev-nudge-ta:focus {
-    outline: 0; border-color: #2563eb;
+    outline: 0; border-color: var(--fbc-2563eb);
     box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
   }
   /* Inline message text under each Nudge row when collapsed */
   .fb-rwprev-nudge-text {
     margin-top: 6px;
     font-size: 13.5px; line-height: 1.5;
-    color: #0a0a0a;
+    color: var(--fbc-0a0a0a);
     white-space: pre-wrap; word-wrap: break-word;
   }
   .fb-rwprev-nudge-text.is-default {
-    color: #64748b; font-style: italic;
+    color: var(--fbc-64748b); font-style: italic;
   }
   .fb-rwprev-nudge-hint {
-    margin: 8px 0 0; font-size: 12px; color: #94a3b8;
+    margin: 8px 0 0; font-size: 12px; color: var(--fbc-94a3b8);
     font-style: italic;
   }
   /* Lead-variable chip row inside a nudge editor — same family as the
@@ -10448,7 +11105,7 @@ const STYLES = `
   }
   .fb-rwprev-nudge-chips-l {
     font-size: 12.5px; font-weight: 600;
-    color: #1e3a8a;
+    color: var(--fbc-1e3a8a);
     letter-spacing: 0.01em;
   }
   .fb-rwprev-nudge-chips-row {
@@ -10459,14 +11116,14 @@ const STYLES = `
        the .fb-token highlights inside the textarea (same color family,
        so the connection between "click chip → insert token → token
        gets highlighted" is obvious). */
-    background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%);
-    border-color: #bfdbfe;
-    color: #1e3a8a;
+    background: linear-gradient(180deg, var(--fbc-eff6ff) 0%, var(--fbc-dbeafe) 100%);
+    border-color: var(--fbc-bfdbfe);
+    color: var(--fbc-1e3a8a);
     font-weight: 600;
   }
   .fb-rwprev-nudge-chip:hover {
-    background: linear-gradient(180deg, #dbeafe 0%, #bfdbfe 100%);
-    border-color: #93c5fd;
+    background: linear-gradient(180deg, var(--fbc-dbeafe) 0%, var(--fbc-bfdbfe) 100%);
+    border-color: var(--fbc-93c5fd);
   }
   /* Highlighted merge-tag chips — used everywhere a message is
      previewed so the user can spot the dynamic bits at a glance. */
@@ -10474,8 +11131,8 @@ const STYLES = `
     display: inline-block;
     padding: 1px 9px;
     margin: 0 1px;
-    background: linear-gradient(180deg, #dbeafe 0%, #bfdbfe 100%);
-    color: #1e3a8a;
+    background: linear-gradient(180deg, var(--fbc-dbeafe) 0%, var(--fbc-bfdbfe) 100%);
+    color: var(--fbc-1e3a8a);
     border-radius: 999px;
     font-size: 0.92em; font-weight: 600;
     letter-spacing: 0.01em;
@@ -10484,7 +11141,7 @@ const STYLES = `
     white-space: nowrap;
   }
   .fb-rwprev-nudge-text.is-default .fb-token {
-    background: linear-gradient(180deg, #e0e7ff 0%, #c7d2fe 100%);
+    background: linear-gradient(180deg, var(--fbc-e0e7ff) 0%, var(--fbc-c7d2fe) 100%);
   }
 
   /* Textarea with inline token highlighting (overlay + textarea stack).
@@ -10548,10 +11205,10 @@ const STYLES = `
        High-saturation yellow so the chip is unmistakable behind any
        text color. The duplicated selectors boost specificity past any
        cascade override. */
-    background-color: #fde68a !important;     /* warm amber — unmissable */
+    background-color: var(--fbc-fde68a) !important;     /* warm amber — unmissable */
     color: transparent !important;            /* textarea on top paints the text */
     border-radius: 3px !important;
-    box-shadow: 0 0 0 1px #f59e0b !important; /* amber outline, no width */
+    box-shadow: 0 0 0 1px var(--fbc-f59e0b) !important; /* amber outline, no width */
     font-weight: inherit !important;
     font-style: inherit !important;
     letter-spacing: inherit !important;
@@ -10566,12 +11223,12 @@ const STYLES = `
   .fb-rwprev-channel {
     margin-top: 22px;
     padding-top: 16px;
-    border-top: 1px solid #f1f5f9;
+    border-top: 1px solid var(--fbc-f1f5f9);
     display: flex; align-items: center; gap: 10px;
     flex-wrap: wrap;
   }
   .fb-rwprev-channel-l {
-    font-size: 12.5px; font-weight: 500; color: #6b7280;
+    font-size: 12.5px; font-weight: 500; color: var(--fbc-6b7280);
   }
   .fb-rwprev-channel-pills {
     display: flex; gap: 6px; flex-wrap: wrap;
@@ -10579,13 +11236,13 @@ const STYLES = `
   .fb-rwprev-cpill {
     padding: 6px 11px; font: inherit;
     font-size: 12.5px; font-weight: 600;
-    border-radius: 999px; border: 1.5px solid #e5e7eb;
-    background: #fff; color: #374151; cursor: pointer;
+    border-radius: 999px; border: 1.5px solid var(--fbc-e5e7eb);
+    background: var(--fbc-fff); color: var(--fbc-374151); cursor: pointer;
     transition: all 0.12s ease;
   }
-  .fb-rwprev-cpill:hover { background: #f9fafb; border-color: #cbd5e1; }
+  .fb-rwprev-cpill:hover { background: var(--fbc-f9fafb); border-color: var(--fbc-cbd5e1); }
   .fb-rwprev-cpill.is-active {
-    background: #0f172a; color: #fff; border-color: #0f172a;
+    background: var(--fbc-0f172a); color: var(--fbc-fff); border-color: var(--fbc-0f172a);
     box-shadow: 0 2px 6px rgba(15,23,42,0.18);
   }
 
@@ -10602,16 +11259,16 @@ const STYLES = `
     flex: 1; display: flex; flex-wrap: wrap;
     gap: 6px;
     padding: 6px;
-    background: #f8fafc;
-    border: 1.5px dashed #e2e8f0; border-radius: 10px;
+    background: var(--fbc-f8fafc);
+    border: 1.5px dashed var(--fbc-e2e8f0); border-radius: 10px;
     min-height: 38px;
   }
   .fb-rwprev-recip-chip {
     display: inline-flex; align-items: center; gap: 4px;
     padding: 4px 4px 4px 10px;
-    background: #fff;
-    border: 1px solid #e5e7eb; border-radius: 999px;
-    font-size: 12.5px; color: #0a0a0a;
+    background: var(--fbc-fff);
+    border: 1px solid var(--fbc-e5e7eb); border-radius: 999px;
+    font-size: 12.5px; color: var(--fbc-0a0a0a);
     box-shadow: 0 1px 2px rgba(15,23,42,0.04);
     max-width: 100%;
   }
@@ -10623,20 +11280,20 @@ const STYLES = `
     width: 18px; height: 18px; padding: 0;
     display: inline-flex; align-items: center; justify-content: center;
     border: 0; border-radius: 50%;
-    background: #f1f5f9; color: #475569;
+    background: var(--fbc-f1f5f9); color: var(--fbc-475569);
     font-size: 13px; font-weight: 700; line-height: 1; cursor: pointer;
     transition: background 0.12s ease, color 0.12s ease;
   }
-  .fb-rwprev-recip-x:hover { background: #fee2e2; color: #b91c1c; }
+  .fb-rwprev-recip-x:hover { background: var(--fbc-fee2e2); color: var(--fbc-b91c1c); }
   .fb-rwprev-recip-input {
     flex: 1; min-width: 110px;
     padding: 4px 8px;
     font: inherit; font-size: 13px;
     border: 0; outline: 0; background: transparent;
-    color: #0a0a0a;
+    color: var(--fbc-0a0a0a);
   }
   .fb-rwprev-recip-input::placeholder {
-    color: #94a3b8; font-style: italic;
+    color: var(--fbc-94a3b8); font-style: italic;
   }
 
   /* Inline AI test panel — visible when fallback="ai" */
@@ -10645,21 +11302,21 @@ const STYLES = `
   }
   .fb-rwtest-input {
     flex: 1; padding: 14px 16px;
-    font-size: 15px; color: #0a0a0a;
-    border: 1.5px solid #e5e7eb; border-radius: 12px;
-    background: #fff; font-family: inherit;
+    font-size: 15px; color: var(--fbc-0a0a0a);
+    border: 1.5px solid var(--fbc-e5e7eb); border-radius: 12px;
+    background: var(--fbc-fff); font-family: inherit;
     transition: border-color 0.14s ease, box-shadow 0.14s ease;
   }
   .fb-rwtest-input:focus {
-    outline: 0; border-color: #2563eb;
+    outline: 0; border-color: var(--fbc-2563eb);
     box-shadow: 0 0 0 4px rgba(37,99,235,0.12);
   }
   .fb-rwtest-btn {
     padding: 0 22px; min-width: 92px;
     font-size: 14.5px; font-weight: 600;
-    border-radius: 12px; border: 1.5px solid #0f172a;
-    background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
-    color: #fff; cursor: pointer; font-family: inherit;
+    border-radius: 12px; border: 1.5px solid var(--fbc-0f172a);
+    background: linear-gradient(180deg, var(--fbc-0f172a) 0%, var(--fbc-1e293b) 100%);
+    color: var(--fbc-fff); cursor: pointer; font-family: inherit;
     transition: all 0.14s ease;
     box-shadow: 0 2px 8px rgba(15,23,42,0.16);
   }
@@ -10670,20 +11327,20 @@ const STYLES = `
   .fb-rwtest-btn:disabled { opacity: 0.6; cursor: progress; transform: none; }
   .fb-rwtest-preview {
     margin-top: 16px; padding: 22px 24px;
-    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-    border: 1.5px solid #e2e8f0; border-radius: 16px;
-    font-size: 15.5px; line-height: 1.65; color: #0a0a0a;
+    background: linear-gradient(180deg, var(--fbc-f8fafc) 0%, var(--fbc-f1f5f9) 100%);
+    border: 1.5px solid var(--fbc-e2e8f0); border-radius: 16px;
+    font-size: 15.5px; line-height: 1.65; color: var(--fbc-0a0a0a);
     white-space: pre-wrap; min-height: 76px;
   }
   .fb-rwtest-preview[data-state="empty"] {
-    color: #94a3b8; font-style: italic;
+    color: var(--fbc-94a3b8); font-style: italic;
   }
   .fb-rwtest-preview[data-state="loading"] {
-    color: #6b7280; font-style: italic;
+    color: var(--fbc-6b7280); font-style: italic;
   }
   .fb-rwtest-preview[data-state="declined"] {
-    background: linear-gradient(180deg, #fff7ed 0%, #ffedd5 100%);
-    border-color: #fdba74; color: #9a3412;
+    background: linear-gradient(180deg, var(--fbc-fff7ed) 0%, var(--fbc-ffedd5) 100%);
+    border-color: var(--fbc-fdba74); color: var(--fbc-9a3412);
   }
 
   /* Read-only cadence summary (driven by the global AI mode).
@@ -10693,21 +11350,21 @@ const STYLES = `
   .fb-replywidget-cadinfo {
     margin-top: 8px;
     padding: 18px 20px;
-    background: #f8fafc;
-    border: 1.5px solid #e2e8f0; border-radius: 14px;
+    background: var(--fbc-f8fafc);
+    border: 1.5px solid var(--fbc-e2e8f0); border-radius: 14px;
     transition: background 0.18s ease, border-color 0.18s ease;
   }
   .fb-replywidget-cadinfo.is-hybrid {
-    background: linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%);
-    border-color: #fde68a;
+    background: linear-gradient(180deg, var(--fbc-fffbeb) 0%, var(--fbc-fef3c7) 100%);
+    border-color: var(--fbc-fde68a);
   }
   .fb-replywidget-cadinfo.is-ai_always {
-    background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%);
-    border-color: #bbf7d0;
+    background: linear-gradient(180deg, var(--fbc-f0fdf4) 0%, var(--fbc-dcfce7) 100%);
+    border-color: var(--fbc-bbf7d0);
   }
   .fb-replywidget-cadinfo.is-i_respond {
-    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-    border-color: #cbd5e1;
+    background: linear-gradient(180deg, var(--fbc-f8fafc) 0%, var(--fbc-f1f5f9) 100%);
+    border-color: var(--fbc-cbd5e1);
   }
   .fb-replywidget-cadinfo-head {
     display: flex; align-items: center; justify-content: space-between;
@@ -10716,30 +11373,30 @@ const STYLES = `
   .fb-replywidget-cadinfo-h {
     font-size: 11.5px; font-weight: 700;
     letter-spacing: 0.06em; text-transform: uppercase;
-    color: #6b7280;
+    color: var(--fbc-6b7280);
   }
   .fb-replywidget-cadinfo-dot {
     width: 10px; height: 10px; border-radius: 50%;
-    background: #d97706;            /* default: hybrid (orange) */
+    background: var(--fbc-d97706);            /* default: hybrid (orange) */
     box-shadow: 0 0 0 3px rgba(217,119,6,0.18);
   }
   .fb-replywidget-cadinfo.is-ai_always .fb-replywidget-cadinfo-dot {
-    background: #16a34a;
+    background: var(--fbc-16a34a);
     box-shadow: 0 0 0 3px rgba(22,163,74,0.20);
   }
   .fb-replywidget-cadinfo.is-i_respond .fb-replywidget-cadinfo-dot {
-    background: #94a3b8;
+    background: var(--fbc-94a3b8);
     box-shadow: 0 0 0 3px rgba(148,163,184,0.20);
   }
   .fb-replywidget-cadinfo-times {
     display: flex; flex-wrap: wrap; gap: 8px;
     align-items: baseline;
-    font-size: 16px; font-weight: 600; color: #0a0a0a;
+    font-size: 16px; font-weight: 600; color: var(--fbc-0a0a0a);
     letter-spacing: -0.01em;
   }
-  .fb-replywidget-cadinfo-sep { color: #cbd5e1; }
+  .fb-replywidget-cadinfo-sep { color: var(--fbc-cbd5e1); }
   .fb-replywidget-cadinfo-mode {
-    font-size: 16px; font-weight: 500; color: #0a0a0a;
+    font-size: 16px; font-weight: 500; color: var(--fbc-0a0a0a);
     letter-spacing: -0.01em;
   }
   .fb-replywidget-cadinfo-mode strong {
@@ -10747,7 +11404,7 @@ const STYLES = `
   }
   .fb-replywidget-cadinfo-link {
     margin-top: 10px;
-    font-size: 12.5px; color: #2563eb; font-weight: 500;
+    font-size: 12.5px; color: var(--fbc-2563eb); font-weight: 500;
   }
 
   /* Hidden native radio inside fallback cards */
@@ -10768,17 +11425,17 @@ const STYLES = `
   .fb-replywidget-fbcard {
     display: flex; flex-direction: column; gap: 8px;
     padding: 22px 22px; cursor: pointer;
-    background: #fff;
-    border: 2px solid #e5e7eb; border-radius: 16px;
+    background: var(--fbc-fff);
+    border: 2px solid var(--fbc-e5e7eb); border-radius: 16px;
     transition: all 0.16s ease; position: relative;
   }
   .fb-replywidget-fbcard:hover {
-    border-color: #cbd5e1; transform: translateY(-1px);
+    border-color: var(--fbc-cbd5e1); transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(15,23,42,0.06);
   }
   .fb-replywidget-fbcard.is-active {
-    border-color: #0f172a;
-    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+    border-color: var(--fbc-0f172a);
+    background: linear-gradient(180deg, var(--fbc-f8fafc) 0%, var(--fbc-f1f5f9) 100%);
     box-shadow: 0 4px 14px rgba(15,23,42,0.10);
     transform: translateY(-1px);
   }
@@ -10786,7 +11443,7 @@ const STYLES = `
     content: "✓"; position: absolute; top: 14px; right: 16px;
     width: 22px; height: 22px;
     display: flex; align-items: center; justify-content: center;
-    background: #0f172a; color: #fff;
+    background: var(--fbc-0f172a); color: var(--fbc-fff);
     border-radius: 50%;
     font-size: 12px; font-weight: 700;
   }
@@ -10795,52 +11452,52 @@ const STYLES = `
     width: 0; height: 0; margin: 0; opacity: 0; position: absolute;
   }
   .fb-replywidget-fbtitle {
-    font-size: 17px; font-weight: 700; color: #0a0a0a;
+    font-size: 17px; font-weight: 700; color: var(--fbc-0a0a0a);
     letter-spacing: -0.01em;
   }
   .fb-replywidget-fbsub {
-    font-size: 13.5px; color: #4b5563; line-height: 1.5;
+    font-size: 13.5px; color: var(--fbc-4b5563); line-height: 1.5;
   }
 
   /* Disabled fallback card (e.g. AI replies when global mode is Off) */
   .fb-replywidget-fbcard.is-disabled {
     cursor: not-allowed;
-    background: #f8fafc;
-    border-color: #e5e7eb;
+    background: var(--fbc-f8fafc);
+    border-color: var(--fbc-e5e7eb);
     box-shadow: none;
     transform: none;
   }
   .fb-replywidget-fbcard.is-disabled:hover {
-    border-color: #e5e7eb; transform: none;
-    box-shadow: none; background: #f8fafc;
+    border-color: var(--fbc-e5e7eb); transform: none;
+    box-shadow: none; background: var(--fbc-f8fafc);
   }
   .fb-replywidget-fbcard.is-disabled .fb-replywidget-fbtitle {
-    color: #94a3b8;
+    color: var(--fbc-94a3b8);
   }
   .fb-replywidget-fbcard.is-disabled .fb-replywidget-fbsub {
-    color: #94a3b8;
+    color: var(--fbc-94a3b8);
   }
   .fb-replywidget-fbtag {
     display: inline-block; margin-left: 8px;
     padding: 2px 8px;
     font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: #6b7280;
-    background: #e5e7eb; border-radius: 999px;
+    color: var(--fbc-6b7280);
+    background: var(--fbc-e5e7eb); border-radius: 999px;
     vertical-align: 2px;
   }
 
   /* Right-side preview */
   .fb-rwprev {
-    background: #fff;
-    border: 1px solid #e5e7eb; border-radius: 18px;
+    background: var(--fbc-fff);
+    border: 1px solid var(--fbc-e5e7eb); border-radius: 18px;
     padding: 26px 26px 22px;
     box-shadow: 0 1px 2px rgba(15,23,42,0.04),
                 0 4px 16px rgba(15,23,42,0.04);
   }
   .fb-rwprev-h {
     font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
-    text-transform: uppercase; color: #6b7280; margin-bottom: 22px;
+    text-transform: uppercase; color: var(--fbc-6b7280); margin-bottom: 22px;
   }
   .fb-rwprev-timeline {
     list-style: none; padding: 0; margin: 0;
@@ -10848,7 +11505,7 @@ const STYLES = `
   }
   .fb-rwprev-timeline::before {
     content: ""; position: absolute; left: 9px; top: 12px; bottom: 12px;
-    width: 2px; background: linear-gradient(180deg, #e5e7eb 0%, #f1f5f9 100%);
+    width: 2px; background: linear-gradient(180deg, var(--fbc-e5e7eb) 0%, var(--fbc-f1f5f9) 100%);
   }
   .fb-rwprev-timeline li {
     position: relative; padding-left: 36px; margin-bottom: 22px;
@@ -10857,33 +11514,33 @@ const STYLES = `
   .fb-rwprev-dot {
     position: absolute; left: 0; top: 4px;
     width: 20px; height: 20px; border-radius: 50%;
-    background: #fff; border: 3px solid #cbd5e1;
+    background: var(--fbc-fff); border: 3px solid var(--fbc-cbd5e1);
     box-shadow: 0 0 0 4px rgba(255,255,255,1);
   }
-  .fb-rwprev-dot.is-cust { border-color: #2563eb; background: #2563eb; }
-  .fb-rwprev-dot.is-ai { border-color: #16a34a; background: #16a34a; }
-  .fb-rwprev-dot.is-custom { border-color: #d97706; background: #d97706; }
+  .fb-rwprev-dot.is-cust { border-color: var(--fbc-2563eb); background: var(--fbc-2563eb); }
+  .fb-rwprev-dot.is-ai { border-color: var(--fbc-16a34a); background: var(--fbc-16a34a); }
+  .fb-rwprev-dot.is-custom { border-color: var(--fbc-d97706); background: var(--fbc-d97706); }
   .fb-rwprev-timeline li > div {
     display: flex; flex-direction: column; gap: 4px;
   }
   .fb-rwprev-timeline strong {
-    font-size: 16px; font-weight: 700; color: #0a0a0a;
+    font-size: 16px; font-weight: 700; color: var(--fbc-0a0a0a);
     letter-spacing: -0.01em;
   }
   .fb-rwprev-timeline span {
-    font-size: 13.5px; color: #6b7280; font-weight: 500;
+    font-size: 13.5px; color: var(--fbc-6b7280); font-weight: 500;
   }
   .fb-rwprev-custom {
     margin-top: 26px; padding: 22px 24px;
-    background: linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%);
-    border: 1.5px solid #fde68a; border-radius: 14px;
+    background: linear-gradient(180deg, var(--fbc-fffbeb) 0%, var(--fbc-fef3c7) 100%);
+    border: 1.5px solid var(--fbc-fde68a); border-radius: 14px;
   }
   .fb-rwprev-custom-h {
     font-size: 11.5px; font-weight: 700; letter-spacing: 0.08em;
-    text-transform: uppercase; color: #92400e; margin-bottom: 12px;
+    text-transform: uppercase; color: var(--fbc-92400e); margin-bottom: 12px;
   }
   .fb-rwprev-custom-body {
-    font-size: 15px; color: #0a0a0a; line-height: 1.65;
+    font-size: 15px; color: var(--fbc-0a0a0a); line-height: 1.65;
     white-space: pre-wrap; word-wrap: break-word;
   }
 
@@ -10897,7 +11554,7 @@ const STYLES = `
     animation: fbFade .18s ease-out;
   }
   .fb-tpl-card {
-    background: #fff; border-radius: 18px;
+    background: var(--fbc-fff); border-radius: 18px;
     max-width: 720px; width: 100%;
     max-height: calc(100% - 40px); overflow-y: auto;
     box-shadow: 0 24px 60px rgba(15,23,42,.18);
@@ -10905,11 +11562,11 @@ const STYLES = `
   }
   .fb-tpl-h { text-align: center; margin-bottom: 18px; }
   .fb-tpl-title {
-    font-size: 22px; font-weight: 700; color: #0a0a0a;
+    font-size: 22px; font-weight: 700; color: var(--fbc-0a0a0a);
     margin: 0 0 6px;
   }
   .fb-tpl-sub {
-    font-size: 14px; color: #6b7280; margin: 0;
+    font-size: 14px; color: var(--fbc-6b7280); margin: 0;
     line-height: 1.5;
   }
   .fb-tpl-grid {
@@ -10921,7 +11578,7 @@ const STYLES = `
   .fb-tpl-pick {
     display: flex; align-items: flex-start; gap: 12px;
     padding: 16px;
-    background: #fff;
+    background: var(--fbc-fff);
     border: 2px solid var(--fb-border);
     border-radius: 14px;
     cursor: pointer; text-align: left;
@@ -10934,7 +11591,7 @@ const STYLES = `
     transform: translateY(-1px);
   }
   .fb-tpl-pick.is-blank {
-    background: #fafafa;
+    background: var(--fbc-fafafa);
     border-style: dashed;
   }
   .fb-tpl-pick-ico {
@@ -10942,17 +11599,17 @@ const STYLES = `
   }
   .fb-tpl-pick-text { flex: 1; min-width: 0; }
   .fb-tpl-pick-name {
-    font-size: 15px; font-weight: 700; color: #0a0a0a;
+    font-size: 15px; font-weight: 700; color: var(--fbc-0a0a0a);
     margin-bottom: 4px;
   }
   .fb-tpl-pick-sub {
-    font-size: 12.5px; color: #6b7280; line-height: 1.45;
+    font-size: 12.5px; color: var(--fbc-6b7280); line-height: 1.45;
     margin-bottom: 6px;
   }
   .fb-tpl-pick-count {
     display: inline-block;
     font-size: 11px; font-weight: 700; color: var(--fb-green);
-    background: #dcfce7; padding: 2px 8px; border-radius: 999px;
+    background: var(--fbc-dcfce7); padding: 2px 8px; border-radius: 999px;
   }
 
   /* ── List view (numbered cards + arrows, branches as splits) ────── */
@@ -10962,7 +11619,7 @@ const STYLES = `
     padding: 28px 24px 60px;
     display: flex; flex-direction: column; align-items: center;
     gap: 0;
-    background: #fafaf9;
+    background: var(--fbc-fafaf9);
   }
   .fb-list-root {
     display: flex; flex-direction: column; align-items: center;
@@ -10970,7 +11627,7 @@ const STYLES = `
   }
   .fb-list-divider {
     margin: 28px 0 14px;
-    font-size: 11px; font-weight: 700; color: #9ca3af;
+    font-size: 11px; font-weight: 700; color: var(--fbc-9ca3af);
     letter-spacing: .05em; text-transform: uppercase;
   }
   .fb-list-card {
@@ -10979,7 +11636,7 @@ const STYLES = `
     grid-template-columns: 32px 28px 1fr auto;
     align-items: center;
     gap: 12px;
-    background: #fff;
+    background: var(--fbc-fff);
     border: 1px solid var(--fb-border);
     border-radius: 14px;
     padding: 14px 16px;
@@ -10987,33 +11644,33 @@ const STYLES = `
                 0 4px 14px rgba(15,23,42,.04);
   }
   .fb-list-card.is-branch {
-    background: linear-gradient(180deg, #fff 0%, #fafaf9 100%);
-    border-color: #c7d2fe;
+    background: linear-gradient(180deg, var(--fbc-fff) 0%, var(--fbc-fafaf9) 100%);
+    border-color: var(--fbc-c7d2fe);
   }
   .fb-list-num {
     width: 28px; height: 28px; border-radius: 50%;
-    background: var(--fb-green); color: #fff;
+    background: var(--fb-green); color: var(--fbc-fff);
     font-size: 13px; font-weight: 700;
     display: inline-flex; align-items: center; justify-content: center;
     flex-shrink: 0;
   }
-  .fb-list-card.is-branch .fb-list-num { background: #6366f1; }
+  .fb-list-card.is-branch .fb-list-num { background: var(--fbc-6366f1); }
   .fb-list-ico { font-size: 22px; line-height: 1; flex-shrink: 0; }
   .fb-list-text { min-width: 0; }
   .fb-list-trigger {
-    font-size: 10.5px; font-weight: 700; color: #6b7280;
+    font-size: 10.5px; font-weight: 700; color: var(--fbc-6b7280);
     letter-spacing: .04em; margin-bottom: 3px;
   }
   .fb-list-title {
-    font-size: 15px; font-weight: 700; color: #0a0a0a;
+    font-size: 15px; font-weight: 700; color: var(--fbc-0a0a0a);
     margin-bottom: 2px;
   }
   .fb-list-desc {
-    font-size: 12.5px; color: #6b7280; line-height: 1.4;
+    font-size: 12.5px; color: var(--fbc-6b7280); line-height: 1.4;
   }
   .fb-list-sub {
     margin-top: 6px;
-    font-size: 12.5px; color: #1c1c1e;
+    font-size: 12.5px; color: var(--fbc-1c1c1e);
     line-height: 1.4;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
@@ -11024,10 +11681,10 @@ const STYLES = `
     cursor: pointer;
     align-self: center;
   }
-  .fb-list-edit:hover { background: #f0fdf4; border-color: #bbf7d0; }
+  .fb-list-edit:hover { background: var(--fbc-f0fdf4); border-color: var(--fbc-bbf7d0); }
 
   .fb-list-arrow {
-    font-size: 20px; color: #9ca3af;
+    font-size: 20px; color: var(--fbc-9ca3af);
     line-height: 1; padding: 6px 0;
   }
   /* The split: yes-path on the left, no-path on the right. Stays
@@ -11042,28 +11699,28 @@ const STYLES = `
   }
   .fb-list-path {
     display: flex; flex-direction: column; align-items: center;
-    background: #fff;
+    background: var(--fbc-fff);
     border: 1px solid var(--fb-border);
     border-radius: 14px;
     padding: 14px 12px 16px;
   }
-  .fb-list-path.is-yes { border-color: #bbf7d0; background: #f7fef9; }
-  .fb-list-path.is-no  { border-color: #e5e7eb; background: #fafafa; }
+  .fb-list-path.is-yes { border-color: var(--fbc-bbf7d0); background: var(--fbc-f7fef9); }
+  .fb-list-path.is-no  { border-color: var(--fbc-e5e7eb); background: var(--fbc-fafafa); }
   .fb-list-path-h {
     display: inline-flex; align-items: center; gap: 8px;
-    font-size: 12.5px; font-weight: 700; color: #166534;
+    font-size: 12.5px; font-weight: 700; color: var(--fbc-166534);
     margin-bottom: 12px;
   }
-  .fb-list-path.is-no .fb-list-path-h { color: #4b5563; }
+  .fb-list-path.is-no .fb-list-path-h { color: var(--fbc-4b5563); }
   .fb-list-path-ico {
     width: 22px; height: 22px; border-radius: 50%;
-    background: #16a34a; color: #fff;
+    background: var(--fbc-16a34a); color: var(--fbc-fff);
     display: inline-flex; align-items: center; justify-content: center;
     font-size: 12px; font-weight: 700;
   }
-  .fb-list-path-ico.is-no { background: #9ca3af; }
+  .fb-list-path-ico.is-no { background: var(--fbc-9ca3af); }
   .fb-list-empty {
-    font-size: 12.5px; color: #9ca3af; text-align: center;
+    font-size: 12.5px; color: var(--fbc-9ca3af); text-align: center;
     padding: 14px 8px; line-height: 1.5;
   }
 
@@ -11072,11 +11729,11 @@ const STYLES = `
     flex: 1; display: flex; flex-direction: column;
     align-items: center; justify-content: center;
     text-align: center; gap: 8px; padding: 60px 20px;
-    color: #6b7280;
+    color: var(--fbc-6b7280);
   }
   .fb-list-blank-ico { font-size: 40px; }
   .fb-list-blank-h {
-    font-size: 17px; font-weight: 700; color: #0a0a0a;
+    font-size: 17px; font-weight: 700; color: var(--fbc-0a0a0a);
   }
   .fb-list-blank-p {
     font-size: 13.5px; line-height: 1.5; max-width: 380px;
@@ -11092,7 +11749,7 @@ const STYLES = `
     animation: fbFade .15s ease-out;
   }
   .fb-chooser-card {
-    background: #fff; border-radius: 16px;
+    background: var(--fbc-fff); border-radius: 16px;
     max-width: 460px; width: 100%;
     max-height: calc(100% - 40px); overflow: hidden;
     display: flex; flex-direction: column;
@@ -11104,28 +11761,28 @@ const STYLES = `
     border-bottom: 1px solid var(--fb-border);
   }
   .fb-chooser-title {
-    font-size: 16px; font-weight: 700; color: #0a0a0a;
+    font-size: 16px; font-weight: 700; color: var(--fbc-0a0a0a);
     margin: 0;
   }
   .fb-chooser-x {
     background: none; border: 0; font-size: 22px;
-    color: #9ca3af; cursor: pointer; padding: 0 6px; line-height: 1;
+    color: var(--fbc-9ca3af); cursor: pointer; padding: 0 6px; line-height: 1;
   }
-  .fb-chooser-x:hover { color: #0a0a0a; }
+  .fb-chooser-x:hover { color: var(--fbc-0a0a0a); }
   .fb-chooser-body {
     flex: 1; overflow-y: auto;
     padding: 8px 12px 14px;
   }
   .fb-chooser-section { margin-bottom: 10px; }
   .fb-chooser-section-h {
-    font-size: 11px; font-weight: 700; color: #4b5563;
+    font-size: 11px; font-weight: 700; color: var(--fbc-4b5563);
     letter-spacing: .04em; text-transform: uppercase;
     margin: 8px 6px 4px;
   }
   .fb-chooser-row {
     width: 100%; display: flex; align-items: flex-start; gap: 10px;
     padding: 10px 12px;
-    background: #fff; border: 1px solid var(--fb-border);
+    background: var(--fbc-fff); border: 1px solid var(--fb-border);
     border-radius: 10px;
     margin-bottom: 6px;
     cursor: pointer; text-align: left;
@@ -11149,18 +11806,18 @@ const STYLES = `
   .fb-chooser-text { flex: 1; min-width: 0; }
   .fb-chooser-name {
     display: block;
-    font-size: 14px; font-weight: 600; color: #0a0a0a;
+    font-size: 14px; font-weight: 600; color: var(--fbc-0a0a0a);
     margin-bottom: 2px;
   }
   .fb-chooser-sub {
     display: block;
-    font-size: 12px; color: #6b7280; line-height: 1.4;
+    font-size: 12px; color: var(--fbc-6b7280); line-height: 1.4;
   }
   .fb-chooser-badge {
     align-self: center; flex-shrink: 0;
     font-size: 10.5px; font-weight: 700;
     padding: 2px 7px; border-radius: 999px;
-    background: #dcfce7; color: #166534;
+    background: var(--fbc-dcfce7); color: var(--fbc-166534);
     letter-spacing: .04em;
   }
 
@@ -11168,14 +11825,14 @@ const STYLES = `
   .fb-library-tpl-btn {
     margin: 8px 12px 4px;
     padding: 8px 12px;
-    background: #fffbeb; border: 1px solid #fde68a;
-    color: #92400e;
+    background: var(--fbc-fffbeb); border: 1px solid var(--fbc-fde68a);
+    color: var(--fbc-92400e);
     border-radius: 8px;
     font: 600 12.5px inherit; cursor: pointer;
     text-align: left;
   }
   .fb-library-tpl-btn:hover {
-    background: #fef3c7; border-color: #fcd34d;
+    background: var(--fbc-fef3c7); border-color: var(--fbc-fcd34d);
   }
 
   /* Drawer footer */
@@ -11185,17 +11842,17 @@ const STYLES = `
     border-top: 1px solid var(--fb-border);
   }
   .fb-drawer-del {
-    background: none; border: 1px solid #fecaca; color: #b91c1c;
+    background: none; border: 1px solid var(--fbc-fecaca); color: var(--fbc-b91c1c);
     padding: 8px 14px; border-radius: 8px;
     font: 500 13px inherit; cursor: pointer;
   }
-  .fb-drawer-del:hover { background: #fef2f2; }
+  .fb-drawer-del:hover { background: var(--fbc-fef2f2); }
   .fb-drawer-done {
-    background: var(--fb-green); color: #fff; border: 0;
+    background: var(--fb-green); color: var(--fbc-fff); border: 0;
     padding: 9px 18px; border-radius: 999px;
     font: 700 13px inherit; cursor: pointer;
   }
-  .fb-drawer-done:hover { background: #15803d; }
+  .fb-drawer-done:hover { background: var(--fbc-15803d); }
 
   /* ════════════════════════════════════════════════════════════════
      POLISH PASS — overrides only. Each block targets a specific
@@ -11220,9 +11877,9 @@ const STYLES = `
   .fb-mode3-ico { font-size: 20px; line-height: 1; }
   .fb-mode3-label { font: 500 14px inherit; }
   .fb-mode3.is-active { border-width: 2px; padding: 0 11px; font-weight: 700; }
-  .fb-mode3.is-email:hover:not(.is-active) { background: #f0f7ff; border-color: #e5e7eb; }
-  .fb-mode3.is-sms:hover:not(.is-active)   { background: #faf7ff; border-color: #e5e7eb; }
-  .fb-mode3.is-both:hover:not(.is-active)  { background: #fffaf0; border-color: #e5e7eb; }
+  .fb-mode3.is-email:hover:not(.is-active) { background: var(--fbc-f0f7ff); border-color: var(--fbc-e5e7eb); }
+  .fb-mode3.is-sms:hover:not(.is-active)   { background: var(--fbc-faf7ff); border-color: var(--fbc-e5e7eb); }
+  .fb-mode3.is-both:hover:not(.is-active)  { background: var(--fbc-fffaf0); border-color: var(--fbc-e5e7eb); }
 
   /* Issue 1 — Recommended badge: inset into Both tile's top-right,
      muted amber, sparkle icon, sentence case. Slight overlap with the
@@ -11231,8 +11888,8 @@ const STYLES = `
     position: absolute; top: -8px; right: 8px;
     display: inline-flex; align-items: center; gap: 3px;
     padding: 2px 7px 2px 6px;
-    background: #fef3c7; color: #92400e;
-    border: 1px solid #fcd34d; border-radius: 999px;
+    background: var(--fbc-fef3c7); color: var(--fbc-92400e);
+    border: 1px solid var(--fbc-fcd34d); border-radius: 999px;
     font: 600 10px inherit; letter-spacing: 0.04em;
     line-height: 1.4; white-space: nowrap;
     box-shadow: 0 1px 2px rgba(15,23,42,.05);
@@ -11248,28 +11905,28 @@ const STYLES = `
     flex: 0 0 24px;
   }
   .fb-recip-lead.is-on .fb-recip-lead-ico {
-    background: #dcfce7; color: #16a34a;
+    background: var(--fbc-dcfce7); color: var(--fbc-16a34a);
   }
   .fb-recip-lead-text { gap: 4px; }
   .fb-recip-lead-l {
-    font: 500 14px inherit; color: #111827; line-height: 1.2;
+    font: 500 14px inherit; color: var(--fbc-111827); line-height: 1.2;
   }
   .fb-recip-lead-s {
-    font: 400 13px inherit; color: #94a3b8; line-height: 1.2;
+    font: 400 13px inherit; color: var(--fbc-94a3b8); line-height: 1.2;
   }
 
   /* Issue 6 — section title system. Sentence case, 14px medium.
      "Who gets this?" already matches; add the same for "Your message". */
   .fb-section-h {
-    font: 500 14px inherit; color: #111827;
+    font: 500 14px inherit; color: var(--fbc-111827);
     margin: 0 0 8px;
   }
   .fb-section-h-sub {
-    font: 400 13px inherit; color: #9ca3af;
+    font: 400 13px inherit; color: var(--fbc-9ca3af);
   }
   /* Demote "Also send to" to a regular sub-label. */
   .fb-recip-also-l {
-    font: 400 12.5px inherit; color: #94a3b8;
+    font: 400 12.5px inherit; color: var(--fbc-94a3b8);
     text-transform: none; letter-spacing: 0;
   }
   .fb-recip-flat-h { font-weight: 500; font-size: 14px; }
@@ -11282,8 +11939,8 @@ const STYLES = `
   .fb-composer-ta,
   .fb-recip-box,
   .fb-prev-testdata-v {
-    border: 1px solid #e5e7eb; border-radius: 8px;
-    background: #fff;
+    border: 1px solid var(--fbc-e5e7eb); border-radius: 8px;
+    background: var(--fbc-fff);
     transition: border-color .15s, box-shadow .15s;
   }
   .fb-input { padding: 10px 12px; font-size: 15px; }
@@ -11292,14 +11949,14 @@ const STYLES = `
   .fb-textarea::placeholder,
   .fb-recip-input::placeholder,
   .fb-prev-testdata-v::placeholder {
-    color: #9ca3af;
+    color: var(--fbc-9ca3af);
   }
   .fb-input:focus,
   .fb-textarea:focus,
   .fb-prev-testdata-v:focus,
   .fb-recip-box:focus-within,
   .fb-composer:focus-within {
-    border-color: #16a34a;
+    border-color: var(--fbc-16a34a);
     box-shadow: 0 0 0 3px rgba(22,163,74,.10);
   }
 
@@ -11319,13 +11976,13 @@ const STYLES = `
   /* Issue 4 — phone mockup: thinner bezel, ~20% smaller, dark gray (not pure black). */
   .fb-phone {
     width: 224px; height: 384px;
-    background: #2a2a2a; border-radius: 28px;
+    background: var(--fbc-2a2a2a); border-radius: 28px;
     padding: 6px;
     box-shadow: none;
   }
   .fb-phone-notch {
     width: 70px; height: 16px;
-    background: #2a2a2a; border-radius: 10px;
+    background: var(--fbc-2a2a2a); border-radius: 10px;
     top: 8px;
   }
   .fb-phone-screen {
@@ -11360,7 +12017,7 @@ const STYLES = `
     gap: 10px; width: 100%; margin-bottom: 8px;
   }
   .fb-prev-header-l {
-    font: 500 13px inherit; color: #6b7280;
+    font: 500 13px inherit; color: var(--fbc-6b7280);
     text-transform: none; letter-spacing: 0;
   }
   .fb-prev-header-pills {
@@ -11375,20 +12032,20 @@ const STYLES = `
   /* Issue 8 — footer: Send-a-test as outlined secondary button. */
   .fb-drawer-test-btn {
     display: inline-flex; align-items: center;
-    background: #fff; border: 1px solid #e5e7eb;
-    color: #111827; font: 600 13px inherit; cursor: pointer;
+    background: var(--fbc-fff); border: 1px solid var(--fbc-e5e7eb);
+    color: var(--fbc-111827); font: 600 13px inherit; cursor: pointer;
     padding: 8px 14px; border-radius: 999px;
     transition: background-color .12s, border-color .12s;
   }
-  .fb-drawer-test-btn:hover { background: #f9fafb; border-color: #cbd5e1; }
+  .fb-drawer-test-btn:hover { background: var(--fbc-f9fafb); border-color: var(--fbc-cbd5e1); }
   .fb-drawer-foot-r { gap: 12px; }
   .fb-drawer-foot {
     align-items: center;
   }
   .fb-drawer-del {
-    color: #b91c1c; opacity: .8;
+    color: var(--fbc-b91c1c); opacity: .8;
   }
-  .fb-drawer-del:hover { opacity: 1; background: #fef2f2; }
+  .fb-drawer-del:hover { opacity: 1; background: var(--fbc-fef2f2); }
 
   /* Polish 1 — subtle horizontal separators between drawer sections.
      Done with a top border on the section roots so we don't have to
@@ -11396,7 +12053,7 @@ const STYLES = `
   .fb-recip-flat,
   .fb-section-h {
     padding-top: 18px;
-    border-top: 1px solid #f1f5f9;
+    border-top: 1px solid var(--fbc-f1f5f9);
   }
   /* …but the very first child shouldn't have a top border. */
   .fb-drawer-edit > .fb-recip-flat:first-child,
@@ -11419,7 +12076,7 @@ const STYLES = `
 
   /* Polish 5 — empty-state copy for the chip rail. */
   .fb-composer-rail-empty {
-    color: #94a3b8; font: 400 12.5px inherit; padding: 2px 4px;
+    color: var(--fbc-94a3b8); font: 400 12.5px inherit; padding: 2px 4px;
   }
 
   /* ════════════════════════════════════════════════════════════════
@@ -11492,10 +12149,10 @@ const STYLES = `
     padding: 8px 0 0;
   }
   .fb-prev-testdata-intro {
-    margin: 0; font: 400 12.5px inherit; color: #6b7280;
+    margin: 0; font: 400 12.5px inherit; color: var(--fbc-6b7280);
     line-height: 1.4;
   }
-  .fb-prev-testdata-intro strong { color: #111827; font-weight: 600; }
+  .fb-prev-testdata-intro strong { color: var(--fbc-111827); font-weight: 600; }
   .fb-prev-testdata {
     /* Override: no internal scroll. The "Show N more" disclosure
        handles overflow without giving the right pane a scrollbar. */
@@ -11509,7 +12166,7 @@ const STYLES = `
     height: 36px;
   }
   .fb-prev-testdata-k {
-    font: 400 13px inherit; color: #475569;
+    font: 400 13px inherit; color: var(--fbc-475569);
     padding-right: 10px;
   }
   .fb-prev-testdata-v {
@@ -11519,7 +12176,7 @@ const STYLES = `
   .fb-prev-testdata-more {
     margin: 4px 0 0; padding: 4px 2px;
     background: transparent; border: 0; cursor: pointer;
-    color: #16a34a; font: 500 12.5px inherit;
+    color: var(--fbc-16a34a); font: 500 12.5px inherit;
     align-self: flex-start;
   }
   .fb-prev-testdata-more:hover { text-decoration: underline; }
@@ -11527,9 +12184,9 @@ const STYLES = `
   /* Empty state when no recipients. */
   .fb-prev-empty {
     margin: 24px auto; padding: 18px 20px;
-    color: #6b7280; font: 400 13px inherit;
+    color: var(--fbc-6b7280); font: 400 13px inherit;
     text-align: center;
-    background: #f8fafc; border: 1px dashed #e2e8f0;
+    background: var(--fbc-f8fafc); border: 1px dashed var(--fbc-e2e8f0);
     border-radius: 10px; max-width: 240px;
   }
 
@@ -11584,7 +12241,7 @@ const STYLES = `
   }
   .fb-subject-prefix {
     position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
-    color: #94a3b8; font-size: 14px; pointer-events: none;
+    color: var(--fbc-94a3b8); font-size: 14px; pointer-events: none;
     user-select: none;
   }
   .fb-subject-input {
@@ -11623,22 +12280,22 @@ const STYLES = `
      state has a green tint + leading check; picker row's used state has
      a soft green wash. Click on either toggles (insert ↔ remove). */
   .fb-chip.is-used {
-    background: #dcfce7; border-color: #86efac;
-    color: #14532d; font-weight: 600;
+    background: var(--fbc-dcfce7); border-color: var(--fbc-86efac);
+    color: var(--fbc-14532d); font-weight: 600;
   }
   .fb-chip.is-used:hover {
-    background: #fee2e2; border-color: #fca5a5; color: #991b1b;
+    background: var(--fbc-fee2e2); border-color: var(--fbc-fca5a5); color: var(--fbc-991b1b);
   }
-  .fb-chip-used { color: #16a34a; }
-  .fb-chip.is-used:hover .fb-chip-used { color: #b91c1c; }
+  .fb-chip-used { color: var(--fbc-16a34a); }
+  .fb-chip.is-used:hover .fb-chip-used { color: var(--fbc-b91c1c); }
 
-  .fb-varpicker-row.is-used { background: #f0fdf4; }
-  .fb-varpicker-row.is-used .fb-varpicker-row-label { color: #14532d; font-weight: 600; }
+  .fb-varpicker-row.is-used { background: var(--fbc-f0fdf4); }
+  .fb-varpicker-row.is-used .fb-varpicker-row-label { color: var(--fbc-14532d); font-weight: 600; }
   .fb-varpicker-row-used {
-    color: #16a34a; font-weight: 700; margin-right: 4px;
+    color: var(--fbc-16a34a); font-weight: 700; margin-right: 4px;
   }
   .fb-varpicker-row.is-used .fb-varpicker-row-insert {
-    background: #fee2e2; color: #991b1b;
+    background: var(--fbc-fee2e2); color: var(--fbc-991b1b);
   }
 
   /* Right pane needs the same compression budget — slimmer phone +
@@ -11682,7 +12339,7 @@ const TOUR_PATHS = {
       title: "Add a step here.",
       body: (
         <>
-          See the green <strong style={{ color: "#0a8a3a" }}>+ Next</strong>{" "}
+          See the green <strong style={{ color: "var(--fbc-0a8a3a)" }}>+ Next</strong>{" "}
           button on the card? Tap it to open a list of things you can add.
         </>
       ),
@@ -11996,8 +12653,8 @@ function FirstTimeGuide() {
       data-sub={isOnSubPath ? "1" : "0"}
       style={{
         ...panelStyle,
-        background: "linear-gradient(135deg,#fff8db 0%,#fef0c8 100%)",
-        border: "2px solid #f0c419",
+        background: "linear-gradient(135deg,var(--fbc-fff8db) 0%,var(--fbc-fef0c8) 100%)",
+        border: "2px solid var(--fbc-f0c419)",
         borderRadius: 14,
         padding: "14px 16px 12px 14px",
         boxShadow: "0 14px 36px rgba(160,110,0,.20), 0 4px 10px rgba(160,110,0,.12)",
@@ -12016,14 +12673,14 @@ function FirstTimeGuide() {
           width: 0, height: 0,
           borderLeft: "10px solid transparent",
           borderRight: "10px solid transparent",
-          borderBottom: "10px solid #f0c419",
+          borderBottom: "10px solid var(--fbc-f0c419)",
         }}>
           <span style={{
             position: "absolute", top: 2, left: -8,
             width: 0, height: 0,
             borderLeft: "8px solid transparent",
             borderRight: "8px solid transparent",
-            borderBottom: "8px solid #fff8db",
+            borderBottom: "8px solid var(--fbc-fff8db)",
           }} />
         </span>
       )}
@@ -12034,14 +12691,14 @@ function FirstTimeGuide() {
           width: 0, height: 0,
           borderLeft: "10px solid transparent",
           borderRight: "10px solid transparent",
-          borderTop: "10px solid #f0c419",
+          borderTop: "10px solid var(--fbc-f0c419)",
         }}>
           <span style={{
             position: "absolute", bottom: 2, left: -8,
             width: 0, height: 0,
             borderLeft: "8px solid transparent",
             borderRight: "8px solid transparent",
-            borderTop: "8px solid #fef0c8",
+            borderTop: "8px solid var(--fbc-fef0c8)",
           }} />
         </span>
       )}
@@ -12050,7 +12707,7 @@ function FirstTimeGuide() {
           style={{
             fontSize: 26,
             flex: "0 0 auto",
-            background: "#fff",
+            background: "var(--fbc-fff)",
             width: 42,
             height: 42,
             borderRadius: 11,
@@ -12061,10 +12718,10 @@ function FirstTimeGuide() {
           }}
         >{cur.icon}</div>
         <div style={{ flex: 1, minWidth: 0, lineHeight: 1.4 }}>
-          <div style={{ fontWeight: 700, fontSize: 14.5, color: "#0a0a0a", marginBottom: 2 }}>
+          <div style={{ fontWeight: 700, fontSize: 14.5, color: "var(--fbc-0a0a0a)", marginBottom: 2 }}>
             {cur.title}
           </div>
-          <div style={{ fontSize: 13, color: "#5a6470" }}>
+          <div style={{ fontSize: 13, color: "var(--fbc-5a6470)" }}>
             {cur.body}
           </div>
         </div>
@@ -12074,7 +12731,7 @@ function FirstTimeGuide() {
           style={{
             background: "transparent",
             border: 0,
-            color: "#5a6470",
+            color: "var(--fbc-5a6470)",
             cursor: "pointer",
             fontSize: 12.5,
             fontWeight: 600,
@@ -12096,14 +12753,14 @@ function FirstTimeGuide() {
                 width: i === tour.step ? 22 : 6,
                 height: 6,
                 borderRadius: 99,
-                background: i <= tour.step ? "#185fa5" : "#cdd7e3",
+                background: i <= tour.step ? "var(--fbc-185fa5)" : "var(--fbc-cdd7e3)",
                 transition: "width .18s ease, background .18s ease",
               }}
             />
           ))}
           {isOnSubPath && (
             <span style={{
-              fontSize: 11, color: "#5a6470", fontWeight: 600,
+              fontSize: 11, color: "var(--fbc-5a6470)", fontWeight: 600,
               marginLeft: 6, alignSelf: "center",
             }}>side trip</span>
           )}
@@ -12113,9 +12770,9 @@ function FirstTimeGuide() {
             type="button"
             onClick={() => showMe(cur.demoSelector, cur.enterPath)}
             style={{
-              background: "#fff8db",
-              color: "#7a5a00",
-              border: "1px solid #f0c419",
+              background: "var(--fbc-fff8db)",
+              color: "var(--fbc-7a5a00)",
+              border: "1px solid var(--fbc-f0c419)",
               borderRadius: 8,
               padding: "6px 12px",
               fontWeight: 700,
@@ -12135,8 +12792,8 @@ function FirstTimeGuide() {
             onClick={back}
             style={{
               background: "transparent",
-              color: "#185fa5",
-              border: "1px solid #cdd7e3",
+              color: "var(--fbc-185fa5)",
+              border: "1px solid var(--fbc-cdd7e3)",
               borderRadius: 8,
               padding: "6px 12px",
               fontWeight: 600,
@@ -12150,8 +12807,8 @@ function FirstTimeGuide() {
           type="button"
           onClick={next}
           style={{
-            background: isLast ? "#0a8a3a" : "#185fa5",
-            color: "#fff",
+            background: isLast ? "var(--fbc-0a8a3a)" : "var(--fbc-185fa5)",
+            color: "var(--fbc-fff)",
             border: 0,
             borderRadius: 8,
             padding: "7px 16px",
@@ -12188,6 +12845,145 @@ function TourReplayButton() {
       title="Show the tour again"
       aria-label="Show the tour again"
     >?</button>
+  );
+}
+
+// Inline-editable flow header — name + description shown next to
+// the "← My Flows" pill. Click either field to edit; saves on blur
+// or Enter via the lightweight op="meta" PATCH so we don't have to
+// round-trip the full nodes/edges payload. Only renders when the
+// flow has a userFlowId (the singleton /me/flows/default and
+// per-form flows aren't user-renamed via this surface).
+function FlowHeader({ userFlowId, name, description, onChange }) {
+  const [editingName, setEditingName] = React.useState(false);
+  const [editingDesc, setEditingDesc] = React.useState(false);
+  const [nameDraft, setNameDraft] = React.useState(name || "");
+  const [descDraft, setDescDraft] = React.useState(description || "");
+  React.useEffect(() => { setNameDraft(name || ""); }, [name]);
+  React.useEffect(() => { setDescDraft(description || ""); }, [description]);
+  if (!userFlowId) return null;
+  const displayName = (name && name.trim()) || "Untitled flow";
+  const displayDesc = (description && description.trim()) || "";
+
+  function patch(payload) {
+    fetch("/me/flows/user/" + encodeURIComponent(userFlowId), {
+      method: "POST", credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ op: "meta", ...payload }),
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (d && d.ok && onChange) onChange(d);
+      })
+      .catch(() => {});
+  }
+  function commitName() {
+    const next = (nameDraft || "").trim();
+    setEditingName(false);
+    if (!next || next === (name || "").trim()) return;
+    patch({ name: next });
+    if (onChange) onChange({ name: next });
+  }
+  function commitDesc() {
+    const next = (descDraft || "").trim();
+    setEditingDesc(false);
+    if (next === (description || "").trim()) return;
+    patch({ description: next });
+    if (onChange) onChange({ description: next });
+  }
+
+  return (
+    <div className="fb-flow-header" style={{
+      position: "absolute", top: 18, left: 130, zIndex: 5,
+      maxWidth: "min(640px, calc(100vw - 360px))",
+      pointerEvents: "auto",
+    }}>
+      {editingName ? (
+        <input
+          autoFocus
+          value={nameDraft}
+          maxLength={200}
+          onChange={(e) => setNameDraft(e.target.value)}
+          onBlur={commitName}
+          onKeyDown={(e) => {
+            if (e.key === "Enter")  { e.preventDefault(); commitName(); }
+            if (e.key === "Escape") { setEditingName(false); setNameDraft(name || ""); }
+          }}
+          style={{
+            font: "inherit", fontSize: 16, fontWeight: 700,
+            color: "var(--fbc-0a0a0a)", padding: "4px 8px",
+            border: "1px solid var(--fbc-818cf8)", borderRadius: 6,
+            background: "var(--fbc-fff)", outline: "none",
+            boxShadow: "0 0 0 3px rgba(129,140,248,0.18)",
+            minWidth: 220,
+          }}
+        />
+      ) : (
+        <div
+          onClick={() => setEditingName(true)}
+          title="Click to rename this flow"
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 6,
+            cursor: "text", padding: "4px 8px", borderRadius: 6,
+            font: "inherit", fontSize: 16, fontWeight: 700,
+            color: "var(--fbc-0a0a0a)",
+            background: "color-mix(in srgb, var(--fbc-fff) 60%, transparent)",
+            backdropFilter: "blur(4px)",
+          }}
+          onMouseOver={(e) => e.currentTarget.style.background = "color-mix(in srgb, var(--fbc-fff) 92%, transparent)"}
+          onMouseOut={(e) => e.currentTarget.style.background = "color-mix(in srgb, var(--fbc-fff) 60%, transparent)"}
+        >
+          <span>{displayName}</span>
+          <span aria-hidden="true" style={{ color: "var(--fbc-94a3b8)", fontSize: 13 }}>✎</span>
+        </div>
+      )}
+      {editingDesc ? (
+        <textarea
+          autoFocus
+          value={descDraft}
+          maxLength={1000}
+          rows={2}
+          onChange={(e) => setDescDraft(e.target.value)}
+          onBlur={commitDesc}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              setEditingDesc(false); setDescDraft(description || "");
+            }
+          }}
+          placeholder="Describe what this flow does…"
+          style={{
+            display: "block", marginTop: 6,
+            font: "inherit", fontSize: 12.5, color: "var(--fbc-475569)",
+            padding: "6px 8px", width: "100%",
+            border: "1px solid var(--fbc-818cf8)", borderRadius: 6,
+            background: "var(--fbc-fff)", outline: "none", resize: "vertical",
+            boxShadow: "0 0 0 3px rgba(129,140,248,0.18)",
+            boxSizing: "border-box", lineHeight: 1.45,
+          }}
+        />
+      ) : (
+        <div
+          onClick={() => setEditingDesc(true)}
+          title="Click to add a description"
+          style={{
+            marginTop: 4, padding: "3px 8px", borderRadius: 6,
+            cursor: "text",
+            font: "inherit", fontSize: 12.5,
+            color: displayDesc ? "var(--fbc-475569)" : "var(--fbc-94a3b8)",
+            background: "color-mix(in srgb, var(--fbc-fff) 55%, transparent)",
+            backdropFilter: "blur(4px)",
+            maxWidth: "100%",
+            overflow: "hidden", textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            fontStyle: displayDesc ? "normal" : "italic",
+          }}
+          onMouseOver={(e) => e.currentTarget.style.background = "color-mix(in srgb, var(--fbc-fff) 92%, transparent)"}
+          onMouseOut={(e) => e.currentTarget.style.background = "color-mix(in srgb, var(--fbc-fff) 55%, transparent)"}
+        >
+          {displayDesc || "+ Add a description"}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -12259,6 +13055,11 @@ export default function FlowBuilder() {
   const [collapsed, setCollapsed] = React.useState(false);
   const [rfInstance, setRfInstance] = React.useState(null);
   const [isDropTarget, setIsDropTarget] = React.useState(false);
+  // NOTE: collapsing the Activity Library rail must NOT re-fit or
+  // resize the canvas — React Flow keeps its own viewport when its
+  // container resizes (it just reveals more canvas). An earlier
+  // fitView()-on-collapse effect re-zoomed the flow and jammed it to
+  // the top; it's intentionally removed. Nothing happens here.
   // Selected node ID drives the message-editor drawer. Click a card on
   // the canvas → drawer opens. Click outside / press Esc / hit Done →
   // drawer closes.
@@ -12419,6 +13220,13 @@ export default function FlowBuilder() {
   // Declared early because showPicker (below) reads it.
   const [hydrated, setHydrated] = React.useState(false);
 
+  // Flow-level metadata — name + description shown in the canvas
+  // header and edited inline. Persisted via the lightweight
+  // op="meta" PATCH so we don't have to round-trip the entire
+  // nodes/edges payload every time the user touches the title.
+  const [flowName, setFlowName]               = React.useState("");
+  const [flowDescription, setFlowDescription] = React.useState("");
+
   // Template picker: shown when the canvas is empty AND the user
   // hasn't picked "Start blank" yet. Re-openable via the library
   // panel's "Use a template" button.
@@ -12494,11 +13302,15 @@ export default function FlowBuilder() {
     window.addEventListener("fb-outreach-nav-reset", onReset);
     return () => window.removeEventListener("fb-outreach-nav-reset", onReset);
   }, []);
+  // No flow selected → no endpoint. The legacy /me/flows/default
+  // singleton is retired: a new account has zero flows; a user
+  // creates the first one. With no endpoint the builder shows the
+  // empty "build your first flow" canvas and persists nothing.
   const flowEndpoint = formId
     ? `/me/forms/${encodeURIComponent(formId)}/flow`
     : (userFlowId
         ? `/me/flows/user/${encodeURIComponent(userFlowId)}`
-        : "/me/flows/default");
+        : "");
 
   // showPicker / TemplatePicker have been removed entirely — empty
   // canvases now open without an interrupting popup; users start from
@@ -12521,6 +13333,15 @@ export default function FlowBuilder() {
   // AND in the autosave path so edits propagate without invalidation.
   React.useEffect(() => {
     let cancelled = false;
+    // No flow selected (legacy default retired) — empty canvas, no
+    // fetch, no persistence. The user picks/creates a flow first.
+    if (!flowEndpoint) {
+      setNodes([]);
+      setEdges([]);
+      setSelectedNodeId(null);
+      setHydrated(true);
+      return () => { cancelled = true; };
+    }
     const cacheKey = "fbflow:" + flowEndpoint;
     let paintedFromCache = false;
     try {
@@ -12531,6 +13352,8 @@ export default function FlowBuilder() {
         if (cflow && Array.isArray(cflow.nodes) && cflow.nodes.length > 0) {
           setNodes(cflow.nodes);
           setEdges(Array.isArray(cflow.edges) ? cflow.edges : []);
+          setFlowName(cflow.name || "");
+          setFlowDescription(cflow.description || "");
           setPickerDismissed(true);
           setHydrated(true);
           paintedFromCache = true;
@@ -12558,6 +13381,8 @@ export default function FlowBuilder() {
             // STATE B / form-attached-already-saved
             setNodes(d.flow.nodes);
             setEdges(Array.isArray(d.flow.edges) ? d.flow.edges : []);
+            setFlowName(d.flow.name || "");
+            setFlowDescription(d.flow.description || "");
             setPickerDismissed(true);
             hasSavedFlow = true;
             // Refresh the cache with the freshly-fetched flow so the
@@ -12640,6 +13465,7 @@ export default function FlowBuilder() {
   const saveTimerRef = React.useRef(null);
   React.useEffect(() => {
     if (!hydrated) return; // don't save before initial load completes
+    if (!flowEndpoint) return; // no flow selected — nothing to save to
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(async () => {
       setSaveStatus("saving");
@@ -12741,10 +13567,10 @@ export default function FlowBuilder() {
           source: incoming[0].source,
           target: outgoing[0].target,
           animated: true,
-          style: { stroke: "#16a34a", strokeWidth: 2.5 },
+          style: { stroke: "var(--fbc-16a34a)", strokeWidth: 2.5 },
           markerEnd: {
             type: MarkerType.ArrowClosed,
-            color: "#16a34a",
+            color: "var(--fbc-16a34a)",
             width: 18,
             height: 18,
           },
@@ -12818,7 +13644,7 @@ export default function FlowBuilder() {
         e.source === params.source &&
         e.target === params.target &&
         ((e.sourceHandle || null) === sh))) return es;
-      const stroke = sh === "no" ? "#9ca3af" : "#16a34a";
+      const stroke = sh === "no" ? "var(--fbc-9ca3af)" : "var(--fbc-16a34a)";
       return addEdge({
         ...params,
         animated: true,
@@ -12912,7 +13738,19 @@ export default function FlowBuilder() {
         subject: activity.defaultSubject || "",
         body: activity.defaultBody || "",
         waitDays: activity.defaultDurationDays || 1,
+        wait_minutes: activity.defaultWaitMinutes || 60,
         conditionId: activity.defaultConditionId || BRANCH_CONDITIONS[0].id,
+        // Follow-up sequence — seed the internal sub-step array + stop
+        // config from the catalog so the block runs the moment it's
+        // dropped (the per-step config panel ships in Phase 2). The
+        // drawer autosave merges onto data, so these survive edits.
+        ...(activity.defaultSteps ? {
+          steps: activity.defaultSteps,
+          stop_on_stage_change: activity.defaultStopOnStageChange || [],
+          stop_on_unsubscribe: activity.defaultStopOnUnsubscribe !== false,
+          respect_quiet_hours: activity.defaultRespectQuietHours !== false,
+          max_total_days: activity.defaultMaxTotalDays || 30,
+        } : {}),
       },
     };
 
@@ -12967,11 +13805,23 @@ export default function FlowBuilder() {
         subject: activity.defaultSubject || "",
         body: activity.defaultBody || "",
         waitDays: activity.defaultDurationDays || 1,
+        wait_minutes: activity.defaultWaitMinutes || 60,
         conditionId: activity.defaultConditionId || BRANCH_CONDITIONS[0].id,
+        // Follow-up sequence — seed the internal sub-step array + stop
+        // config from the catalog so the block runs the moment it's
+        // dropped (the per-step config panel ships in Phase 2). The
+        // drawer autosave merges onto data, so these survive edits.
+        ...(activity.defaultSteps ? {
+          steps: activity.defaultSteps,
+          stop_on_stage_change: activity.defaultStopOnStageChange || [],
+          stop_on_unsubscribe: activity.defaultStopOnUnsubscribe !== false,
+          respect_quiet_hours: activity.defaultRespectQuietHours !== false,
+          max_total_days: activity.defaultMaxTotalDays || 30,
+        } : {}),
       },
     };
     const isNoPath = chooser.sourceHandle === "no";
-    const edgeColor = isNoPath ? "#9ca3af" : "#16a34a";
+    const edgeColor = isNoPath ? "var(--fbc-9ca3af)" : "var(--fbc-16a34a)";
     const newEdge = {
       id: `e-${chooser.sourceId}-${newId}`,
       source: chooser.sourceId,
@@ -13031,6 +13881,24 @@ export default function FlowBuilder() {
       >
         <FirstTimeGuide />
         <BackPill />
+        <FlowHeader
+          userFlowId={userFlowId}
+          name={flowName}
+          description={flowDescription}
+          onChange={(patch) => {
+            if (patch && typeof patch.name === "string") {
+              setFlowName(patch.name);
+            }
+            if (patch && typeof patch.description === "string") {
+              setFlowDescription(patch.description);
+            }
+            // Notify the rest of the app so the My-Flows table can
+            // refresh its name on the next paint.
+            try {
+              window.dispatchEvent(new CustomEvent("agents:changed"));
+            } catch (_) {}
+          }}
+        />
         <TourReplayButton />
         {!hydrated && (
           <div className="fb-loading" role="status" aria-live="polite" aria-label="Loading your flow">
@@ -13120,29 +13988,29 @@ export default function FlowBuilder() {
           deleteKeyCode={["Delete", "Backspace"]}
           onNodeClick={onNodeClick}
           onInit={setRfInstance}
-          fitView
+          fitView={Array.isArray(nodes) && nodes.length > 0}
           fitViewOptions={{ padding: 0.25 }}
           snapToGrid
           snapGrid={[40, 40]}
           defaultEdgeOptions={{
             animated: true,
-            style: { stroke: "#16a34a", strokeWidth: 2.5 },
+            style: { stroke: "var(--fbc-16a34a)", strokeWidth: 2.5 },
             markerEnd: {
               type: MarkerType.ArrowClosed,
-              color: "#16a34a",
+              color: "var(--fbc-16a34a)",
               width: 18,
               height: 18,
             },
           }}
           proOptions={{ hideAttribution: true }}
         >
-          <Background gap={20} size={1} color="#d1d5db" />
+          <Background gap={20} size={1} color="var(--fbc-d1d5db)" />
           <Controls position="bottom-right" />
           <MiniMap
             position="bottom-left"
             pannable
             zoomable
-            nodeColor={(n) => (n.data && n.data.on ? "#16a34a" : "#9ca3af")}
+            nodeColor={(n) => (n.data && n.data.on ? "var(--fbc-16a34a)" : "var(--fbc-9ca3af)")}
           />
         </ReactFlow>
       </div>
@@ -13187,4 +14055,5 @@ export default function FlowBuilder() {
     </FlowContext.Provider>
   );
 }
+
 
